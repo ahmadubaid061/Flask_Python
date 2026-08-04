@@ -1,0 +1,55 @@
+{% extends "base.html" %} {% block title %}Sign Up - Page{% endblock %} {% block
+header %} Sign Up for User Profile Management System{% endblock %} {% block
+content %}
+<h2>Sign Up</h2>
+<form method="POST" action="{{ url_for('register') }}">
+    <div>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required />
+    </div> <br>
+    <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required />
+    </div><br>
+    <div>
+        <label for="password">Password:</label>
+        <input type="text" id="password" name="password" placeholder="Enter your password" required />
+    </div><br>
+    <div>
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" name="phone" placeholder="Enter your phone number" required />
+    </div><br>
+    <div>
+        <label>Hobbies:</label><br>
+
+        <input type="checkbox" name="hobbies" value="reading" id="reading">
+        <label for="reading">Reading</label><br>
+
+        <input type="checkbox" name="hobbies" value="swimming" id="swimming">
+        <label for="swimming">Swimming</label><br>
+
+        <input type="checkbox" name="hobbies" value="cycling" id="cycling">
+        <label for="cycling">Cycling</label><br>
+
+        <input type="checkbox" name="hobbies" value="football" id="football">
+        <label for="football">Football</label><br>
+
+        <input type="checkbox" name="hobbies" value="cricket" id="cricket">
+        <label for="cricket">Cricket</label><br>
+
+        <input type="checkbox" name="hobbies" value="coding" id="coding">
+        <label for="coding">Coding</label><br>
+
+        <input type="checkbox" name="hobbies" value="chai" id="chai">
+        <label for="chai">Chai</label><br>
+
+        <input type="checkbox" name="hobbies" value="hiking" id="hiking">
+        <label for="hiking">Hiking</label><br>
+    </div><br>
+    <div>
+        <label for="age">Age:</label>
+        <input type="text" name="age" id="age" placeholder="Enter your age" required />
+    </div><br>
+    <button type="submit">Sign Up</button>
+</form>
+{% endblock %}

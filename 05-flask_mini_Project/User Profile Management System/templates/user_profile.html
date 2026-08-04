@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}User Profile{% endblock %}
+{% block header %}User Profile{% endblock %}
+{% block content %}
+<h2>User Profile</h2>
+<p>Welcome, {{ user.username }}!</p>
+<p>Phone: {{ user.phone }}</p>
+<p>
+    Hobbies:
+<ul style="list-style: disc;display: flex;flex-direction: column; align-items: flex-start;">
+    {% for hobby in user.hobbies %}
+    <li>{{ hobby }}</li>
+    {% endfor %}
+</ul>
+
+
+</p>
+
+
+<p>Age: {{ user.age }}</p>
+<br>
+<br>
+<a href="{{url_for('logout')}}"> Logout</a>
+{% endblock %}

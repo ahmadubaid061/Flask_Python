@@ -5,6 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}User Profile Management System{% endblock %}</title>
+    <style>
+        header {
+            background-color: #8baccd;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            display: inline;
+            margin-right: 10px;
+        }
+
+        footer {
+            background-color: #7d9bb8;
+            padding: 10px;
+            text-align: center;
+            margin-top: 30px;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -13,14 +43,18 @@
         <nav>
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/sign_up">Sign Up</a></li>
-                <li><a href="/sign_in">Sign In</a></li>
+                <li><a href="{{ url_for('register') }}">Sign Up</a></li>
+                <li><a href="{{ url_for('login') }}">Sign In</a></li>
             </ul>
         </nav>
     </header>
-    <main>
-        {% block content %}
-        {% endblock %}
+    <main style="display:flex;flex-direction: column; align-items: center; margin-top: 50px; padding: bottom 30px;">
+        <div class="content">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+
     </main>
     <footer>
         <p>&copy; 2024 User Profile Management System</p>
