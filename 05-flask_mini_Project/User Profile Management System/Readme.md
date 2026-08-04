@@ -2,6 +2,7 @@
 
 A simple Flask mini project where users can sign up, sign in, and view their profile. Built to practice Flask routing, forms, and sessions.
 
+
 ## Features
 
 - Sign up with username, email, password, phone, age, and hobbies
@@ -66,3 +67,12 @@ Then open `http://127.0.0.1:5000/` in your browser.
 - User data is stored in memory only — it resets every time the app restarts.
 - Passwords are stored as plain text, which is fine for learning but not safe for a real app.
 - Next steps for a production version: use a real database, hash passwords, and add form validation.
+
+## What I learned
+
+- How Flask routes handle `GET` vs `POST` for the same URL
+- How to read form data with `request.form.get()` and `request.form.getlist()`
+- How `session` keeps track of a logged-in user across requests
+- How to structure templates with Jinja2 inheritance (`base.html` + child templates)
+- How to build a basic sign up / sign in / profile / logout flow from scratch
+
