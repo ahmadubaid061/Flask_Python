@@ -1,0 +1,12 @@
+user visits the home page
+home page asks the user for sign in to see their profile
+the sign in page asks for username and password
+also if user doesn't have an account, it provides a link to the sign-up page
+sign up page asks for username,email,password,subjects he is registered for and his hobbies
+
+--main app.py--
+contains a session list for storing user objects
+each user is a dictionary with keys: username, email, password, subjects, hobbies
+when user signs up, their information is stored in the session list
+when user signs in, their credentials are checked against the session list
+
