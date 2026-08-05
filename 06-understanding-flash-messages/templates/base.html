@@ -25,8 +25,26 @@
             padding: 20px;
         }
 
+        .sidebar {
+            height: 55vh;
+            /* Full-height */
+            width: 30%;
+
+            background-color: #575555;
+
+            /* Disable horizontal scroll */
+            padding-top: 20px;
+            margin: 10px;
+            border-radius: 10px;
+            float: left;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
         main {
-            margin: 20px 30px;
+            width: 60%;
+            background-color: #f1f1f1;
+            margin: 10px 20%;
             padding: 20px 30px;
             border-radius: 10px;
             display: flex;
@@ -49,6 +67,18 @@
     <header>
         <h1>Understanding Flash Messages</h1>
     </header>
+    <div class="sidebar">
+        <h2 style="text-align: center;">Flash Messages</h2>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
     {%block content %}
 
     {%endblock%}

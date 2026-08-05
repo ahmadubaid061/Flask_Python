@@ -2,13 +2,13 @@
 {% block title %}Feedback - Form{% endblock %}
 {%block content%}
 <main>
-    <form action="{{ url_for('form') }}" method="post">
+    <form action="/" method="post">
         <h2>Hello This is Feedback form</h2>
         <label for="name">Name:</label><br>
-        <input type="text" name="name" id="name" placeholder="enter your name..." required>
+        <input type="text" name="name" id="name" placeholder="enter your name...">
         <br><br>
         <label for="email">Email:</label><br>
-        <input type="email" name="email" id="email" placeholder="enter your email...." required>
+        <input type="email" name="email" id="email" placeholder="enter your email....">
         <br><br>
         <label for="message">Message:</label><br>
         <textarea name="message" id="message" placeholder="Enter your message...."></textarea><br><br>
