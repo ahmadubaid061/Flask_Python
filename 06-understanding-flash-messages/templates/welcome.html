@@ -1,0 +1,18 @@
+{%extends "base.html"%}
+{% block title %}Welcome - Page{% endblock %}
+{%block content%}
+<main>
+    <h1>
+        Thanks for your Feedback, {{name}} !
+    </h1>
+    <p>
+        We have received your message and will get back to you at {{email}} as soon as possible.
+    </p> <br>
+    <p>message content;
+        <q>{{message}}</q>
+
+    </p>
+    <br> <a href="{{ url_for('form') }}"> Back to form</a>
+
+</main>
+{%endblock%}

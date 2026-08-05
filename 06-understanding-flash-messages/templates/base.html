@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block title %}Flask Flash Messages{% endblock %}
+    <style>
+        header {
+            text-align: center;
+            background-color: #333;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+            height: 15vh;
+            padding: 20px;
+
+        }
+
+        footer {
+            text-align: center;
+            background-color: #333;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+            height: 20vh;
+            padding: 20px;
+        }
+
+        main {
+            margin: 20px 30px;
+            padding: 20px 30px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        form {
+            background-color: cadetblue;
+            border-radius: 10px;
+            color: white;
+            padding: 20px;
+            width: 40%;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Understanding Flash Messages</h1>
+    </header>
+    {%block content %}
+
+    {%endblock%}
+
+    <footer>
+        &copy; 2026 Ubaid Ahmad Flask Developer
+    </footer>
+</body>
+
+</html>
