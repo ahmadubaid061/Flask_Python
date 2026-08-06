@@ -1,11 +1,11 @@
-{extends "base.html"}
+{%extends "base.html"%}
 {% block title %}Success - Page{% endblock %}
-{% block content %} 
-    <h1>Form Submitted Successfully!</h1>
-    {%with messages = get_flashed_messages() %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
-    <a href="{{ url_for('form') }}">Back to form</a>
+{% block content %}
+<h1>Form Submitted Successfully!</h1>
+{%with messages = get_flashed_messages() %}
+{% for message in messages %}
+<p>{{ message }}</p>
+{% endfor %}
+{% endwith %}
+<a href="{{ url_for('Register') }}">Back to form</a>
 {% endblock %}

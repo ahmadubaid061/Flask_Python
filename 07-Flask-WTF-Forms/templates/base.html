@@ -5,15 +5,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% block title %}Document{% endblock %}
+    <style>
+        .flash-messages {
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+        }
+
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert a {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body>
     <header>
         <h1>Flask-WTF Forms</h1>
     </header>
-    {% block content %}
+    <main>
+        <!-- Flash Messages Section - Show only error messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, msg in messages %}
+            <!-- Only display error messages here -->
+            {% if category == 'error' %}
+            <div class="alert alert-error" role="alert">
+                {{ msg | safe }}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
 
-    {% endblock %}
+        <!-- inheretence block  -->
+        {% block content %}{% endblock %}
+    </main>
+
     <footer>
         <p>
             &copy; 2026 Flask-WTF Forms. All rights reserved.
