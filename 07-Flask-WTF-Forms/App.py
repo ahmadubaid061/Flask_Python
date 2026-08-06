@@ -22,7 +22,10 @@ def Register():
         if form.errors:
             # Flash a general error message
             flash("Please correct the errors in the form.", "error")
-            
+            # Optionally flash each field error individually
+            for field_name, field_errors in form.errors.items():
+                for error in field_errors:
+                    flash(f"{form[field_name].label.text}: {error}", "error")
     return render_template("form.html",form=form)
 
 @app.route("/success")
