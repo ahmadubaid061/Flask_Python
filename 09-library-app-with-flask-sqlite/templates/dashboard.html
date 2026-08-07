@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 15px; }
+        h1 { text-align: center; }
+        h2 { margin-top: 40px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+        button { margin-top: 20px; padding: 10px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button.delete-btn { background: #e53935; padding: 4px 8px; margin-top: 0; }
+        a.back-link { display: inline-block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>📋 Dashboard</h1>
+
+    <h2>Add a Book</h2>
+    <form method="post" action="{{ url_for('dashboard') }}">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="author">Author</label>
+        <input type="text" id="author" name="author" required>
+
+        <label for="category">Category</label>
+        <input type="text" id="category" name="category" placeholder="e.g. Literature, Science, History" required>
+
+        <button type="submit">Add Book</button>
+    </form>
+
+    <h2>All Books</h2>
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Category</th>
+            <th></th>
+        </tr>
+        {% for book in books %}
+        <tr>
+            <td>{{ book['title'] }}</td>
+            <td>{{ book['author'] }}</td>
+            <td>{{ book['category'] }}</td>
+            <td>
+                <form method="post" action="{{ url_for('delete_book', book_id=book['id']) }}"
+                      onsubmit="return confirm('Delete this book?');">
+                    <button class="delete-btn" type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No books found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a class="back-link" href="{{ url_for('index') }}">&larr; Back to library</a>
+</body>
+</html>
