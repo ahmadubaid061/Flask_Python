@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Tasks | Page{% endblock %}
+
+{% block content %}
+<div class="top">
+    <h2>welcome, {{ user.username }}!</h2>
+    <form action="{{ url_for('tasks.add_task') }}" method="POST">
+        <button type="submit">Add Task</button>
+    </form>
+</div>
+
+{%with messages = get_flashed_messages() %}
+{% for message in messages %}
+<div class="alert alert-info" id="flash-message">{{ message }}</div>
+{% endfor %}
+{% endwith %}
+<div class="task_list">
+    {%if tasks%}
+    {% for task in tasks %}
+    <div class="task_card">
+        <h3>{{ task.title }}</h3>
+        <div class="buttons">
+            <form action="{{ url_for('tasks.update_task', task_id=task.id) }}" method="POST">
+                <input type="hidden" name="status" value="{{ 'Completed' if task.status == 'Pending' else 'Pending' }}">
+                <button type="submit">{{ 'Mark as Completed' if task.status == 'Pending' else 'Mark as Pending'
+                    }}</button>
+            </form>
+            <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST">
+                <button type="submit">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div>
+        <p>No tasks available. for user {{ user.username }}</p>
+        <form action="{{ url_for('tasks.add_task') }}" method="POST">
+            <button type="submit">Add Task</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('auth.logout') }}">Logout</a>
+{% endblock %}

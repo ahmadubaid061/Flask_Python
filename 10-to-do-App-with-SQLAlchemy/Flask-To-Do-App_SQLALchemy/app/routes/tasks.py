@@ -1,14 +1,14 @@
 from flask import Blueprint, render_template, redirect, url_for, flash,request, session
 from app.models import Task, User
 from app import db
-tasks = Blueprint('tasks', __name__)    
+tasks_bp = Blueprint('tasks', __name__)    
 
 #---------------------------------------home route---------------------------------------
-@tasks.route('/')
+@tasks_bp.route('/')
 def home():
     return render_template('home.html')
 #---------------------------------------view all tasks---------------------------------------
-@tasks.route('/view_tasks', methods=['GET', 'POST'])
+@tasks_bp.route('/view_tasks', methods=['GET', 'POST'])
 def view_tasks():
     if 'user_id' not in session:
         flash('Please log in to view your tasks.', 'danger')
@@ -22,7 +22,7 @@ def view_tasks():
 
 
 #---------------------------------------add task---------------------------------------
-@tasks.route('/add', methods=['POST'])
+@tasks_bp.route('/add', methods=['POST'])
 def add_task():
     if 'user_id' not in session:
         flash('Please log in to add tasks.', 'danger')
@@ -39,7 +39,7 @@ def add_task():
 
 
 #---------------------------------------toggle task status---------------------------------------
-@tasks.route('/toggle/<int:task_id>', methods=['POST'])
+@tasks_bp.route('/toggle/<int:task_id>', methods=['POST'])
 def toggle_task(task_id):
     if 'user_id' not in session:
         flash('Please log in to update tasks.', 'danger')
@@ -63,7 +63,7 @@ def toggle_task(task_id):
     
     return redirect(url_for('tasks.view_tasks'))
 #---------------------------------------delete task---------------------------------------
-@tasks.route('/delete/<int:task_id>', methods=['POST']) 
+@tasks_bp.route('/delete/<int:task_id>', methods=['POST']) 
 def delete_task(task_id):
     if 'user_id' not in session:
         flash('Please log in to delete tasks.', 'danger')
