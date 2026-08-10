@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
-import os
+import os #for reading environment variables from .env file
 
 # load .env into environment variables (do this once, at import time)
 load_dotenv()

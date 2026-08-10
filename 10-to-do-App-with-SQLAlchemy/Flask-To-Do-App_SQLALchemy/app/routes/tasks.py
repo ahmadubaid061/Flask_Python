@@ -3,9 +3,12 @@ from app.models import Task, User
 from app import db
 tasks = Blueprint('tasks', __name__)    
 
-
+#---------------------------------------home route---------------------------------------
+@tasks.route('/')
+def home():
+    return render_template('home.html')
 #---------------------------------------view all tasks---------------------------------------
-@tasks.route('/', methods=['GET', 'POST'])
+@tasks.route('/view_tasks', methods=['GET', 'POST'])
 def view_tasks():
     if 'user_id' not in session:
         flash('Please log in to view your tasks.', 'danger')
@@ -14,7 +17,7 @@ def view_tasks():
     user_id = session['user_id']
     user = User.query.get(user_id)
     tasks = Task.query.filter_by(user_id=user.id).all()
-    return render_template('tasks.html', tasks=tasks, user=user)
+    return render_template('view_tasks.html', tasks=tasks, user=user)
 
 
 
@@ -43,7 +46,12 @@ def toggle_task(task_id):
         return redirect(url_for('auth.login'))
     
     task = Task.query.get(task_id)
-    if task:
+    
+    if not task:
+        flash('Task not found.', 'danger')
+    elif task.user_id != session['user_id']:
+        flash('You are not authorized to update this task.', 'danger')
+    else:
         if task.status == 'Pending':
             task.status = 'inProcess'
         elif task.status == 'inProcess':
@@ -52,11 +60,8 @@ def toggle_task(task_id):
             task.status = 'Pending'
         db.session.commit()
         flash('Task status updated successfully!', 'success')
-    else:
-        flash('Task not found.', 'danger')
+    
     return redirect(url_for('tasks.view_tasks'))
-
-
 #---------------------------------------delete task---------------------------------------
 @tasks.route('/delete/<int:task_id>', methods=['POST']) 
 def delete_task(task_id):
@@ -65,10 +70,14 @@ def delete_task(task_id):
         return redirect(url_for('auth.login'))
     
     task = Task.query.get(task_id)
-    if task:
+    
+    if not task:
+        flash('Task not found.', 'danger')
+    elif task.user_id != session['user_id']:
+        flash('You are not authorized to delete this task.', 'danger')
+    else:
         db.session.delete(task)
         db.session.commit()
         flash('Task deleted successfully!', 'success')
-    else:
-        flash('Task not found.', 'danger')
+    
     return redirect(url_for('tasks.view_tasks'))
