@@ -14,6 +14,11 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    from app.routes.auth import auth_bp
+    from app.routes.tasks import tasks_bp
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(tasks_bp)
 
     db.init_app(app)
 
