@@ -2,44 +2,73 @@
 {% block title %}Tasks | Page{% endblock %}
 
 {% block content %}
-<div class="top">
-    <h2>welcome, {{ user.username }}!</h2>
-    <form action="{{ url_for('tasks.add_task') }}" method="POST">
-        <button type="submit">Add Task</button>
-    </form>
-</div>
-
-{%with messages = get_flashed_messages() %}
-{% for message in messages %}
-<div class="alert alert-info" id="flash-message">{{ message }}</div>
-{% endfor %}
-{% endwith %}
-<div class="task_list">
-    {%if tasks%}
-    {% for task in tasks %}
-    <div class="task_card">
-        <h3>{{ task.title }}</h3>
-        <div class="buttons">
-            <form action="{{ url_for('tasks.update_task', task_id=task.id) }}" method="POST">
-                <input type="hidden" name="status" value="{{ 'Completed' if task.status == 'Pending' else 'Pending' }}">
-                <button type="submit">{{ 'Mark as Completed' if task.status == 'Pending' else 'Mark as Pending'
-                    }}</button>
-            </form>
-            <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST">
-                <button type="submit">Delete</button>
-            </form>
-        </div>
+<main>
+    <div class="top">
+        <h2>Welcome, {{ user.username }}!</h2>
+        <button class="btn-add" onclick="toggleAddform()">+ Add Task</button>
     </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="alert alert-info" id="flash-message">{{ message }}</div>
     {% endfor %}
-    {% else %}
-    <div>
-        <p>No tasks available. for user {{ user.username }}</p>
-        <form action="{{ url_for('tasks.add_task') }}" method="POST">
-            <button type="submit">Add Task</button>
-        </form>
-    </div>
-    {% endif %}
-</div>
+    {% endwith %}
 
-<a href="{{ url_for('auth.logout') }}">Logout</a>
+    <div class="task_list">
+        {% if tasks %}
+        {% for task in tasks %}
+        <div class="task_card">
+            <div class="task_title">
+                <h3>{{ task.title }}</h3>
+            </div>
+            <div class="buttons">
+                <form action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" method="POST">
+                    <button type="submit" class="status_btn status-{{ task.status }}">
+                        {% if task.status == 'Pending' %}
+                        Pending
+                        {% elif task.status == 'inProcess' %}
+                        In Process
+                        {% else %}
+                        Completed
+                        {% endif %}
+                    </button>
+                </form>
+                <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST">
+                    <button type="submit" class="delete_btn">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty_state">
+            <p>No tasks available for user {{ user.username }}</p>
+            <button class="btn-add" onclick="toggleAddform()">+ Add Task</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <a href="{{ url_for('auth.logout') }}" class="logout_link">Logout</a>
+
+    <!-- overlay -->
+    <div class="overlay" onclick="toggleAddform()"></div>
+
+    <!-- add task form -->
+    <form action="{{ url_for('tasks.add_task') }}" method="post" id="addtask_form">
+        <h2>Enter Task Details</h2>
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" name="title" id="title" placeholder="type title here..." required>
+        </div>
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select name="status" id="status">
+                <option value="">--select--</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="inProcess">inProcess</option>
+            </select>
+        </div>
+        <button type="submit" onclick="toggleAddform()">Add Task</button>
+    </form>
+</main>
 {% endblock %}

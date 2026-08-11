@@ -2,7 +2,10 @@
 {% block title %}Home | Page{% endblock %}
 
 {% block content %}
+<main>
     <h2>Welcome to the To-Do App!</h2>
     <p>Manage your tasks efficiently and stay organized.</p>
     <a href="{{ url_for('tasks.view_tasks') }}">View All Tasks</a>
+</main>
+
 {% endblock %}

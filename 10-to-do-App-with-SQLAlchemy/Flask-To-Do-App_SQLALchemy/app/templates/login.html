@@ -2,22 +2,24 @@
 {% block title %}Login | Page{% endblock %}
 
 {% block content %}
-<h2>Login</h2>
-{%with messages = get_flashed_messages() %}
-{% for message in messages %}
-<div class="alert alert-info" id="flash-message">{{ message }}</div>
-{% endfor %}
-{% endwith %}
-<form method="POST" action="{{ url_for('auth.login') }}">
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" class="form-control" id="username" name="username" required>
-    </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="text" class="form-control" id="password" name="password" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Login</button>
-    <button type="submit" class="btn btn-primary"><a href="{{ url_for('auth.register') }}">Register</a></button>
-</form>
+<main>
+    {%with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="alert alert-info" id="flash-message">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('auth.login') }}" class="auth_form">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="text" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+        <button type="submit" class="btn btn-primary"><a href="{{ url_for('auth.register') }}">Register</a></button>
+    </form>
+</main>
 {% endblock %}
