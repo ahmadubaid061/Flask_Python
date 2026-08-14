@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Your Dashboard</h2>
+
+{% if not has_data %}
+<p>No logs yet. <a href="{{ url_for('logs.log_today') }}">Log today's data</a> to get started.</p>
+{% else %}
+
+{% if insights %}
+<div class="alert alert-success">
+    <strong>Insights:</strong>
+    <ul class="mb-0">
+        {% for insight in insights %}
+        <li>{{ insight }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% elif days_logged < min_days %} <div class="alert alert-secondary">
+    Log {{ min_days - days_logged }} more day(s) to unlock insights.
+    </div>
+    {% endif %}
+
+    <canvas id="moodChart" height="100"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Jinja injects the Python data as JSON directly into the page --
+        // this is the "Option 1" approach we discussed: no separate
+        // API call needed, Chart.js just reads this variable.
+        const chartData = {{ chart_data | tojson }};
+
+        const ctx = document.getElementById('moodChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.dates,
+                datasets: [
+                    {
+                        label: 'Mood',
+                        data: chartData.mood,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Sleep (hours)',
+                        data: chartData.sleep_hours,
+                        borderColor: 'rgb(255, 159, 64)',
+                        tension: 0.2
+                    }
+                ]
+            },
+            options: {
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    </script>
+    {% endif %}
+    {% endblock %}

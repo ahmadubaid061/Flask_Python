@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ 'Edit' if existing_log else 'Log' }} Today's Data</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+        {{ form.mood.label }}
+        {{ form.mood(class='form-control') }}
+        {% for error in form.mood.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.sleep_hours.label }}
+        {{ form.sleep_hours(class='form-control') }}
+        {% for error in form.sleep_hours.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.water_liters.label }}
+        {{ form.water_liters(class='form-control') }}
+    </div>
+
+    <div class="mb-3">
+        {{ form.exercise_minutes.label }}
+        {{ form.exercise_minutes(class='form-control') }}
+    </div>
+
+    <div class="mb-3">
+        {{ form.study_hours.label }}
+        {{ form.study_hours(class='form-control') }}
+    </div>
+
+    {{ form.submit(class='btn btn-primary') }}
+</form>
+{% endblock %}
