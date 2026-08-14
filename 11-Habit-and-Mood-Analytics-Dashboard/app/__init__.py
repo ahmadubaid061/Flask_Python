@@ -1,6 +1,7 @@
 from flask import Flask
 from config import Config
-from app.extensions import db, login_manager, mail
+from app.extensions import db, login_manager, mail,Migrate
+
 
 def create_app():
     app = Flask(__name__)
@@ -9,6 +10,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
+    migrate = Migrate(app, db)
 
     from app.routes.auth import auth_bp
     from app.routes.habits import habits_bp

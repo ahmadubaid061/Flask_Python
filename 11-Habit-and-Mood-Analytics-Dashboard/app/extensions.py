@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_migrate import Migrate
 
 # Initialized here, with no app yet attached.
 # Each extension gets wired to the real app later inside create_app()
@@ -12,6 +13,7 @@ from flask_mail import Mail
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
+
 
 # Where Flask-Login redirects a user if they hit a @login_required
 # route without being logged in. 'auth.login' means: blueprint 'auth',
