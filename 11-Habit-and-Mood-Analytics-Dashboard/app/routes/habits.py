@@ -9,6 +9,20 @@ from app.forms import HabitForm
 habits_bp = Blueprint('habits', __name__)
 
 
+def _compute_streak(completed_dates_desc):
+    # completed_dates_desc: dates already sorted newest-first.
+    # Counts consecutive days backward from the most recent completion.
+    if not completed_dates_desc:
+        return 0
+    streak = 1
+    for i in range(len(completed_dates_desc) - 1):
+        if (completed_dates_desc[i] - completed_dates_desc[i + 1]).days == 1:
+            streak += 1
+        else:
+            break
+    return streak
+
+
 @habits_bp.route('/habits', methods=['GET', 'POST'])
 @login_required
 def list_habits():
@@ -33,7 +47,25 @@ def list_habits():
         ).all()
     }
 
-    return render_template('habits.html', form=form, habits=habits, today_logs=today_logs)
+    # Per-habit current streak, computed the same way as the dashboard's
+    # overall streak: consecutive completed days ending at the most
+    # recent completion for that specific habit.
+    habit_streaks = {}
+    for habit in habits:
+        completed_dates = [
+            hl.log_date for hl in HabitLog.query.filter_by(
+                habit_id=habit.id, completed=True
+            ).order_by(HabitLog.log_date.desc()).all()
+        ]
+        habit_streaks[habit.id] = _compute_streak(completed_dates)
+
+    return render_template(
+        'habits.html',
+        form=form,
+        habits=habits,
+        today_logs=today_logs,
+        habit_streaks=habit_streaks,
+    )
 
 
 @habits_bp.route('/habits/<int:habit_id>/toggle', methods=['POST'])

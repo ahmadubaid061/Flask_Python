@@ -50,6 +50,19 @@ def home():
         if exercise_mood_corr > 0.4:
             insights.append('You tend to feel better on days you exercise.')
 
+    # Current streak: consecutive days ending at the most recent log,
+    # counting backward while each day is exactly one day before the last.
+    # This reads your logging history honestly -- if the streak was broken
+    # a week ago, it reports the streak that's actually still standing,
+    # not a running total since the account began.
+    log_dates_desc = sorted((log.log_date for log in logs), reverse=True)
+    current_streak = 1
+    for i in range(len(log_dates_desc) - 1):
+        if (log_dates_desc[i] - log_dates_desc[i + 1]).days == 1:
+            current_streak += 1
+        else:
+            break
+
     return render_template(
         'dashboard.html',
         has_data=True,
@@ -57,4 +70,5 @@ def home():
         insights=insights,
         days_logged=len(df),
         min_days=MIN_DAYS_FOR_INSIGHTS,
+        current_streak=current_streak,
     )

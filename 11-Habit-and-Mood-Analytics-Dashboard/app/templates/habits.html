@@ -1,31 +1,52 @@
 {% extends 'base.html' %}
+{% block title %}Habits — Habit & Mood{% endblock %}
 {% block content %}
-<h2>Your Habits</h2>
+<div class="wrap" style="padding-top:32px;padding-bottom:56px">
 
-<form method="POST" class="mb-4">
-    {{ form.hidden_tag() }}
-    {{ form.name(class='form-control d-inline-block w-auto') }}
-    {{ form.submit(class='btn btn-primary') }}
-</form>
-
-<ul class="list-group">
-    {% for habit in habits %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        {{ habit.name }}
+    <div class="dash-head">
         <div>
-            <form method="POST" action="{{ url_for('habits.toggle_habit', habit_id=habit.id) }}" class="d-inline">
-                <button type="submit"
-                    class="btn btn-sm {{ 'btn-success' if today_logs.get(habit.id) else 'btn-outline-secondary' }}">
-                    {{ 'Done today' if today_logs.get(habit.id) else 'Mark done' }}
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('habits.delete_habit', habit_id=habit.id) }}" class="d-inline">
-                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-            </form>
+            <h1>Your habits</h1>
+            <p class="lede">Small, repeatable things you're choosing to track.</p>
         </div>
-    </li>
+    </div>
+
+    <form method="POST" class="habit-form-row">
+        {{ form.hidden_tag() }}
+        {{ form.name(placeholder='e.g. Meditate, Read, No phone after 10pm') }}
+        {{ form.submit(class='btn btn-primary') }}
+    </form>
+
+    {% if habits %}
+    <div class="habit-grid">
+        {% for habit in habits %}
+        <div class="habit-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <h4>{{ habit.name }}</h4>
+                {% if habit_streaks.get(habit.id) %}
+                <span class="stat-chip" style="background:var(--honey-100);color:var(--honey-600)">{{ habit_streaks.get(habit.id) }} day{{ 's' if habit_streaks.get(habit.id) != 1 }}</span>
+                {% endif %}
+            </div>
+            <div class="habit-actions">
+                <form method="POST" action="{{ url_for('habits.toggle_habit', habit_id=habit.id) }}">
+                    <button type="submit" class="chip-toggle {{ 'is-done' if today_logs.get(habit.id) }}">
+                        {{ 'Done today' if today_logs.get(habit.id) else 'Mark done' }}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('habits.delete_habit', habit_id=habit.id) }}">
+                    <button type="submit" class="icon-btn" aria-label="Delete {{ habit.name }}">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-    <li class="list-group-item">No habits yet — add one above.</li>
-    {% endfor %}
-</ul>
+    <div class="panel empty-state">
+        <h3>No habits yet</h3>
+        <p>Add your first one above — you can always change it later.</p>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}

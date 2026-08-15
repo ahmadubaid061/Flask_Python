@@ -1,36 +1,54 @@
 {% extends 'base.html' %}
+{% block title %}{{ 'Edit' if existing_log else 'Log' }} today — Habit & Mood{% endblock %}
 {% block content %}
-<h2>{{ 'Edit' if existing_log else 'Log' }} Today's Data</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
+<div class="wrap" style="padding-top:32px;padding-bottom:56px;max-width:560px">
 
-    <div class="mb-3">
-        {{ form.mood.label }}
-        {{ form.mood(class='form-control') }}
-        {% for error in form.mood.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    <div class="dash-head">
+        <div>
+            <h1>{{ 'Edit today' if existing_log else 'Log today' }}</h1>
+            <p class="lede">
+                {{ "You've already logged today — update it below." if existing_log else "Thirty seconds, then you're done." }}
+            </p>
+        </div>
     </div>
 
-    <div class="mb-3">
-        {{ form.sleep_hours.label }}
-        {{ form.sleep_hours(class='form-control') }}
-        {% for error in form.sleep_hours.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    <div class="panel">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="field">
+                {{ form.mood.label }}
+                {{ form.mood() }}
+                {% for error in form.mood.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="field">
+                {{ form.sleep_hours.label }}
+                {{ form.sleep_hours() }}
+                {% for error in form.sleep_hours.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="field">
+                {{ form.water_liters.label }}
+                {{ form.water_liters() }}
+                {% for error in form.water_liters.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="field">
+                {{ form.exercise_minutes.label }}
+                {{ form.exercise_minutes() }}
+                {% for error in form.exercise_minutes.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="field">
+                {{ form.study_hours.label }}
+                {{ form.study_hours() }}
+                {% for error in form.study_hours.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            {{ form.submit(class='btn btn-primary btn-block') }}
+        </form>
     </div>
 
-    <div class="mb-3">
-        {{ form.water_liters.label }}
-        {{ form.water_liters(class='form-control') }}
-    </div>
-
-    <div class="mb-3">
-        {{ form.exercise_minutes.label }}
-        {{ form.exercise_minutes(class='form-control') }}
-    </div>
-
-    <div class="mb-3">
-        {{ form.study_hours.label }}
-        {{ form.study_hours(class='form-control') }}
-    </div>
-
-    {{ form.submit(class='btn btn-primary') }}
-</form>
+</div>
 {% endblock %}

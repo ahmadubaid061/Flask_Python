@@ -1,25 +1,42 @@
 {% extends 'base.html' %}
+{% block title %}History — Habit & Mood{% endblock %}
 {% block content %}
-<h2>Log History</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Date</th><th>Mood</th><th>Sleep (h)</th><th>Water (L)</th><th>Exercise (min)</th><th>Study (h)</th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="wrap" style="padding-top:32px;padding-bottom:56px">
+
+    <div class="dash-head">
+        <div>
+            <h1>Log history</h1>
+            <p class="lede">Every day you've logged, newest first.</p>
+        </div>
+    </div>
+
+    {% if logs %}
+    <div class="timeline">
         {% for log in logs %}
-        <tr>
-            <td>{{ log.log_date }}</td>
-            <td>{{ log.mood }}</td>
-            <td>{{ log.sleep_hours }}</td>
-            <td>{{ log.water_liters }}</td>
-            <td>{{ log.exercise_minutes }}</td>
-            <td>{{ log.study_hours }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="6">No logs yet.</td></tr>
+        <div class="day-card">
+            <div class="day-date">
+                {{ log.log_date }}
+            </div>
+            <div class="day-stats">
+                <span class="mood-badge">
+                    <span class="mood-dot {{ 'mood-high' if log.mood >= 7 else ('mood-mid' if log.mood >= 4 else 'mood-low') }}"></span>
+                    Mood {{ log.mood }}
+                </span>
+                <span class="stat-chip">Sleep {{ log.sleep_hours }}h</span>
+                <span class="stat-chip">Water {{ log.water_liters }}L</span>
+                <span class="stat-chip">Exercise {{ log.exercise_minutes }}min</span>
+                <span class="stat-chip">Study {{ log.study_hours }}h</span>
+            </div>
+        </div>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+    {% else %}
+    <div class="panel empty-state">
+        <h3>No logs yet</h3>
+        <p>Your history fills in the moment you log your first day.</p>
+        <a href="{{ url_for('logs.log_today') }}" class="btn btn-primary">Log today's data</a>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}

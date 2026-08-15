@@ -1,58 +1,187 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard — Habit & Mood{% endblock %}
 {% block content %}
-<h2>Your Dashboard</h2>
+<div class="wrap" style="padding-top:32px;padding-bottom:56px">
 
-{% if not has_data %}
-<p>No logs yet. <a href="{{ url_for('logs.log_today') }}">Log today's data</a> to get started.</p>
-{% else %}
+    <div class="dash-head">
+        <div>
+            <h1>Welcome back, {{ current_user.email.split('@')[0] }}</h1>
+            <p class="lede">Here's how your days have been adding up.</p>
+        </div>
+    </div>
 
-{% if insights %}
-<div class="alert alert-success">
-    <strong>Insights:</strong>
-    <ul class="mb-0">
-        {% for insight in insights %}
-        <li>{{ insight }}</li>
-        {% endfor %}
-    </ul>
-</div>
-{% elif days_logged < min_days %} <div class="alert alert-secondary">
-    Log {{ min_days - days_logged }} more day(s) to unlock insights.
+    {% if not has_data %}
+    <div class="panel empty-state">
+        <h3>Nothing logged yet</h3>
+        <p>Your dashboard fills in the moment you log your first day.</p>
+        <a href="{{ url_for('logs.log_today') }}" class="btn btn-primary">Log today's data</a>
+    </div>
+    {% else %}
+
+    {% set total_mood = namespace(v=0) %}
+    {% for m in chart_data.mood %}{% set total_mood.v = total_mood.v + m %}{% endfor %}
+    {% set avg_mood = (total_mood.v / chart_data.mood|length) %}
+
+    {% set total_sleep = namespace(v=0) %}
+    {% for s in chart_data.sleep_hours %}{% set total_sleep.v = total_sleep.v + s %}{% endfor %}
+    {% set avg_sleep = (total_sleep.v / chart_data.sleep_hours|length) %}
+
+    <div class="metric-strip">
+        <div class="metric-card">
+            <div class="metric-label">Days logged</div>
+            <div class="metric-value">{{ days_logged }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Current streak</div>
+            <div class="metric-value">{{ current_streak }}<span class="unit">day{{ 's' if current_streak != 1 }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Latest mood</div>
+            <div class="metric-value">{{ chart_data.mood[-1] }}<span class="unit">/ 10</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Average mood</div>
+            <div class="metric-value">{{ avg_mood | round(1) }}<span class="unit">/ 10</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Average sleep</div>
+            <div class="metric-value">{{ avg_sleep | round(1) }}<span class="unit">hrs</span></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Weekly pattern analysis</h2>
+            <p>See how your mood moves alongside sleep, night by night.</p>
+        </div>
+        <div class="chart-container">
+            <canvas id="moodChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Your patterns</h2>
+            <p>What your own numbers are saying — nothing invented.</p>
+        </div>
+
+        {% if insights %}
+        <div class="insight-list">
+            {% for insight in insights %}
+            <div class="insight-card">
+                <span class="mood-dot mood-high" style="margin-top:5px"></span>
+                <span>{{ insight }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif days_logged < min_days %} <div class="locked-card">
+            <span class="mood-dot mood-mid"></span>
+            <span>Log {{ min_days - days_logged }} more day{{ 's' if (min_days - days_logged) != 1 }} to unlock
+                insights.</span>
+    </div>
+    {% else %}
+    <div class="locked-card">
+        <span class="mood-dot mood-mid"></span>
+        <span>No strong patterns yet — keep logging and check back.</span>
     </div>
     {% endif %}
+</div>
 
-    <canvas id="moodChart" height="100"></canvas>
+<div class="quick-actions">
+    <a href="{{ url_for('logs.log_today') }}" class="quick-action">
+        <span class="qa-icon" style="background:var(--honey-100)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--honey-600)" stroke-width="2">
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+        </span>
+        <span><strong>Log today</strong><span>Add or edit today's entry</span></span>
+    </a>
+    <a href="{{ url_for('habits.list_habits') }}" class="quick-action">
+        <span class="qa-icon" style="background:var(--teal-100)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2">
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="9" />
+            </svg>
+        </span>
+        <span><strong>Manage habits</strong><span>Add, complete, or remove</span></span>
+    </a>
+    <a href="{{ url_for('logs.history') }}" class="quick-action">
+        <span class="qa-icon" style="background:var(--plum-100)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--plum)" stroke-width="2">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 8v4l3 2" />
+            </svg>
+        </span>
+        <span><strong>View history</strong><span>Every day you've logged</span></span>
+    </a>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Jinja injects the Python data as JSON directly into the page --
-        // this is the "Option 1" approach we discussed: no separate
-        // API call needed, Chart.js just reads this variable.
-        const chartData = {{ chart_data | tojson }};
+{% endif %}
+</div>
 
-        const ctx = document.getElementById('moodChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartData.dates,
-                datasets: [
-                    {
-                        label: 'Mood',
-                        data: chartData.mood,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.2
-                    },
-                    {
-                        label: 'Sleep (hours)',
-                        data: chartData.sleep_hours,
-                        borderColor: 'rgb(255, 159, 64)',
-                        tension: 0.2
-                    }
-                ]
+{% if has_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Same data contract as before -- Jinja injects chart_data as JSON,
+    // Chart.js reads it. Only the visual configuration below is new.
+    const chartData = {{ chart_data | tojson }};
+    const styles = getComputedStyle(document.documentElement);
+    const teal = styles.getPropertyValue('--teal').trim();
+    const honey = styles.getPropertyValue('--honey').trim();
+    const line = styles.getPropertyValue('--line').trim();
+    const ink = styles.getPropertyValue('--ink-900').trim();
+
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.color = '#4A5568';
+
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.dates,
+            datasets: [
+                {
+                    label: 'Mood',
+                    data: chartData.mood,
+                    borderColor: teal,
+                    backgroundColor: teal,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    tension: 0.35,
+                    borderWidth: 2.5
+                },
+                {
+                    label: 'Sleep (hours)',
+                    data: chartData.sleep_hours,
+                    borderColor: honey,
+                    backgroundColor: honey,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    tension: 0.35,
+                    borderWidth: 2.5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } },
+                tooltip: {
+                    backgroundColor: ink,
+                    padding: 10,
+                    cornerRadius: 8,
+                    titleFont: { weight: '600' }
+                }
             },
-            options: {
-                scales: { y: { beginAtZero: true } }
+            scales: {
+                y: { beginAtZero: true, grid: { color: line }, border: { display: false } },
+                x: { grid: { display: false }, border: { display: false } }
             }
-        });
-    </script>
-    {% endif %}
-    {% endblock %}
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

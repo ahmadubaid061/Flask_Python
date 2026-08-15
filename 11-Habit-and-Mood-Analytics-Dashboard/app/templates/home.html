@@ -1,7 +1,141 @@
 {% extends 'base.html' %}
+{% block title %}Habit & Mood — Track, Understand, Improve{% endblock %}
 {% block content %}
-<h1>Habit & Mood Dashboard</h1>
-<p>Log your daily mood, sleep, water, and habits — and let the app find patterns you'd never notice on your own.</p>
-<a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
-<a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">Log In</a>
+
+<section class="hero">
+    <div class="wrap hero-grid">
+        <div>
+            <span class="eyebrow">Personal analytics, not a spreadsheet</span>
+            <h1>Find the pattern hiding<br>in <em>your</em> own days.</h1>
+            <p class="hero-sub">
+                Log a few numbers each evening — mood, sleep, water, habits — and let the
+                app do the noticing. No dashboards to configure, no spreadsheets to maintain.
+            </p>
+            <div class="hero-ctas">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Start tracking</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline">I have an account</a>
+            </div>
+        </div>
+
+        <div class="rhythm-card" aria-hidden="true">
+            <div class="rhythm-label">
+                <span>THIS WEEK</span>
+                <span>MOOD RHYTHM</span>
+            </div>
+            <div class="rhythm-bars">
+                <div class="bar" style="height:52%"></div>
+                <div class="bar is-honey" style="height:38%"></div>
+                <div class="bar" style="height:70%"></div>
+                <div class="bar" style="height:64%"></div>
+                <div class="bar is-honey" style="height:44%"></div>
+                <div class="bar" style="height:82%"></div>
+                <div class="bar" style="height:76%"></div>
+            </div>
+            <div class="rhythm-dots">
+                <span class="mood-dot mood-mid"></span>
+                <span class="mood-dot mood-mid"></span>
+                <span class="mood-dot mood-high"></span>
+                <span class="mood-dot mood-high"></span>
+                <span class="mood-dot mood-mid"></span>
+                <span class="mood-dot mood-high"></span>
+                <span class="mood-dot mood-high"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="wrap">
+        <div class="section-head">
+            <span class="eyebrow">What it tracks</span>
+            <h2>Six numbers a day. One clearer picture of you.</h2>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="background:var(--teal-100)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                </div>
+                <h3>Habit tracking</h3>
+                <p>Define the habits that matter to you and mark them done, day by day.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background:var(--honey-100)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--honey-600)" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+                </div>
+                <h3>Mood tracking</h3>
+                <p>A quick 1–10 check-in each day builds a real record of how you actually feel.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background:var(--plum-100)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--plum)" stroke-width="1.8"><path d="M4 15a5 5 0 0 1 8-4 5 5 0 0 1 8 4"/></svg>
+                </div>
+                <h3>Sleep tracking</h3>
+                <p>Log the hours. It's usually the first thread worth pulling on.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background:var(--teal-100)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16"/></svg>
+                </div>
+                <h3>Daily logging</h3>
+                <p>Thirty seconds a day. Water, exercise, study hours — whatever you're watching.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background:var(--honey-100)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--honey-600)" stroke-width="1.8"><path d="M4 19V9M12 19V5M20 19v-7"/></svg>
+                </div>
+                <h3>Weekly insights</h3>
+                <p>Once there's enough data, the app looks for real correlations — and says so honestly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background:var(--plum-100)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--plum)" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+                </div>
+                <h3>Personal analytics</h3>
+                <p>Your history, visualized — a private timeline only you can see.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="wrap">
+        <div class="section-head">
+            <span class="eyebrow">How it works</span>
+            <h2>Four steps, repeated daily.</h2>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">01</div>
+                <h4>Log your day</h4>
+                <p>Mood, sleep, water, habits — in under a minute.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <h4>Build your history</h4>
+                <p>Every entry adds one more data point to your own record.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <h4>Discover patterns</h4>
+                <p>The app compares your numbers and surfaces what actually correlates.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">04</div>
+                <h4>Improve</h4>
+                <p>Act on what your own data says, not on generic advice.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="wrap">
+    <div class="cta-band">
+        <h2>Your days are already telling a story.</h2>
+        <p>Start logging today and let the pattern come to you.</p>
+        <div class="hero-ctas" style="justify-content:center;margin-top:20px">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Create your account</a>
+        </div>
+    </div>
+</section>
+
 {% endblock %}
