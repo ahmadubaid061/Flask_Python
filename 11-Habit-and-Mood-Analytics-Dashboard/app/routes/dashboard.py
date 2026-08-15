@@ -7,7 +7,7 @@ from app.models import DailyLog
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-MIN_DAYS_FOR_INSIGHTS = 14  # don't show correlations until there's enough data
+MIN_DAYS_FOR_INSIGHTS = 7  # don't show correlations until there's enough data
 
 
 @dashboard_bp.route('/dashboard')
