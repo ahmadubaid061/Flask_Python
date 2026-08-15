@@ -49,7 +49,10 @@ The most advanced project in the repo — a wellness tracker with email-verified
 
 Roughly, the repo moves from:
 
-**Flask fundamentals** (routing, templating, forms, flash messages) → **structuring a real app** (blueprints, app factory) → **persistence** (raw SQL, then an ORM) → **full applications** (auth, deployment, external services like email and hosted Postgres, and lightweight data analysis with Pandas).
+- **Flask fundamentals** (routing, templating, forms, flash messages)
+- **structuring a real app** (blueprints, app factory)
+- **persistence** (raw SQL, then an ORM)
+- **full applications** (auth, deployment, external services like email and hosted Postgres, and lightweight data analysis with Pandas).
 
 ## Tech Touched Across the Repo
 
