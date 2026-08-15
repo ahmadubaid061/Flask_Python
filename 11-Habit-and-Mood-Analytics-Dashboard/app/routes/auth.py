@@ -20,7 +20,7 @@ def register():
         db.session.commit()
 
         send_verification_email(new_user.email)
-        flash('Account created! Check your email to verify before logging in.')
+        flash('Account created! Check your email(spam folder) to verify before logging in.')
         return redirect(url_for('auth.login'))
 
     return render_template('register.html', form=form)
