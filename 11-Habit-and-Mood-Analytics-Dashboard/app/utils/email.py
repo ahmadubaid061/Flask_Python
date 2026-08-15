@@ -1,8 +1,13 @@
+from threading import Thread
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app, url_for
 from flask_mail import Message
 
 from app.extensions import mail
+
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
 
 
 def generate_verification_token(email):
@@ -33,4 +38,7 @@ def send_verification_email(user_email):
         body=f'Click the link to verify your account: {verify_url}\n\n'
              f'This link expires in 1 hour.'
     )
-    mail.send(msg)
+    # Send in background thread to prevent Vercel timeout
+    Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+    
+    
