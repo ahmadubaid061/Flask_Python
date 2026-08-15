@@ -36,7 +36,7 @@ A small library catalog app used to learn how `sqlite3` works with Flask using r
 A personal task manager with per-user accounts. Add, view, and delete tasks, and move them through Pending → In Process → Completed.
 
 - **Live:** [flask-todo-app-vert.vercel.app](https://flask-todo-app-vert.vercel.app/)
-- [Project README](./10-to-do-App-with-SQLAlchemy/Flask-To-Do-App_SQLALchemy/README.md)
+- [Project README](./10-to-do-App-with-SQLAlchemy/Flask-To-Do-App_SQLALchemy/readme.md)
 
 ### 📊 Habit & Mood Dashboard
 
