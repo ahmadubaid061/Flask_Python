@@ -57,3 +57,9 @@ Roughly, the repo moves from:
 ## Tech Touched Across the Repo
 
 Flask, Jinja2, Flask-WTF / WTForms, Flask-Login, Flask-SQLAlchemy, Flask-Migrate, Flask-Mail, SQLite, PostgreSQL (Neon), Pandas, Chart.js, and deployment on Vercel.
+
+
+## Any Suggestions:
+always feel free to contact me
+- email: ahamdubaidedu@gmail.com
+- watsapp: +923428994095
