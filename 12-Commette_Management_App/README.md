@@ -1,186 +1,156 @@
-# Committee Management Web Application
+# Committee Management App
 
-A web-based committee/ROSCA (Rotating Savings and Credit Association) management system. This application allows administrators to manage committee members, track recurring contributions, manage committee cycles, record payments, and monitor payouts.
+A web app for running one or more rotating savings committees (ROSCA / kameti
+/ bisi). Each committee has a fixed contribution amount that every member
+pays every period (weekly or monthly). At the end of each period, one member
+receives the full pool collected — chosen outside the app — until everyone in
+that committee has received it exactly once.
 
-## Technology Stack
+> **Status:** planning / early scaffold. See `DOCUMENTATION.md` for the full
+> client-facing spec (pages, roles, data model, open questions). This README
+> is the developer-facing quick start.
 
-| Layer             | Technology                         | Purpose                                    |
-| ----------------- | ---------------------------------- | ------------------------------------------ |
-| Backend           | Python + Flask                     | Application logic, routing, authentication |
-| ORM / Database    | SQLAlchemy + Turso                 | Models and persistent relational data      |
-| Forms             | WTForms / Flask-WTF                | Validation and secure form handling        |
-| Frontend          | Jinja2 + HTML/CSS/Bootstrap        | Server-rendered user interface             |
-| Authentication    | Flask session + email verification | Login and new-browser verification         |
-| Production server | Gunicorn                           | WSGI server on Render                      |
-| Hosting           | Render Web Service                 | Deploy and run Flask application           |
-| Database hosting  | Turso                              | Persistent remote SQLite/libSQL database   |
+## Features
 
-## Application Architecture
+- Multiple committees can run at the same time, each independent
+- Each committee is **Weekly** or **Monthly**
+- One fixed contribution amount per committee (not per member)
+- Public, no-login pages: home (all committees), a committee's detail page,
+  and a member's detail page with a contribution pie chart
+- Admin-only dashboard: committee cards, an "Explore" screen per committee to
+  manage members and mark payment/payout status, and a "Create Committee" form
+- Members can only be added/removed before a committee's start date
+- Admin login protected by email verification on any new/unrecognized browser
 
-The project follows a Flask application-factory structure. Extensions are initialized separately, models are grouped by responsibility, routes are separated into blueprints, and utility code handles email and browser/session verification.
+## Tech Stack
 
-**Request Flow:** Browser → Flask route/blueprint → form validation → business logic → SQLAlchemy model → Turso database → Jinja template → Browser.
+| Layer | Choice |
+|---|---|
+| Backend | Flask (application factory pattern) |
+| ORM | Flask-SQLAlchemy |
+| Forms | Flask-WTF (WTForms + CSRF) |
+| Templates | Jinja2 |
+| Auth | Flask-Login + Flask-Mail (email verification codes) |
+| Database | Turso (libSQL), via `sqlalchemy-libsql` |
+| Migrations | Flask-Migrate (Alembic) |
+| Hosting | Render (free web service) |
 
-## Folder Structure
+## Project Structure
 
 ```
-your_project/
+committee_app/
 ├── app/
-│   ├── __init__.py              # Flask application factory
-│   ├── config.py                # Environment-based configuration
-│   ├── extensions.py            # SQLAlchemy / Flask-WTF extensions
+│   ├── __init__.py          # app factory
+│   ├── extensions.py        # db, login_manager, mail, csrf, migrate
 │   ├── models/
-│   │   ├── __init__.py
-│   │   ├── user.py              # Admin/user account
-│   │   ├── committee.py         # Committee configuration
-│   │   ├── member.py            # Committee members
-│   │   ├── payment.py           # Member payment records
-│   │   ├── payout.py            # Payout/turn records
-│   │   └── session.py           # Browser verification/session records
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── auth.py              # Login, verification, logout
-│   │   ├── main.py              # Dashboard/home
-│   │   ├── members.py           # Member management
-│   │   ├── payments.py          # Payment recording/status
-│   │   └── payouts.py           # Payout management
-│   ├── forms/
-│   │   ├── __init__.py
-│   │   ├── login.py
-│   │   ├── verify.py
+│   │   ├── admin.py
+│   │   ├── committee.py     # committee-level fixed amount, frequency, status
 │   │   ├── member.py
-│   │   └── payment.py
+│   │   ├── payment.py
+│   │   ├── payout.py
+│   │   └── device_token.py  # TrustedDevice + LoginVerification
+│   ├── forms/
+│   ├── routes/
+│   │   ├── main.py          # home
+│   │   ├── auth.py          # login, verify, logout
+│   │   ├── committees.py    # public committee detail page
+│   │   ├── members.py       # public member detail page
+│   │   └── dashboard.py     # admin dashboard, explore, create-committee
 │   ├── templates/
-│   │   ├── base.html
-│   │   ├── login.html
-│   │   ├── verify.html
-│   │   ├── dashboard.html
-│   │   ├── members.html
-│   │   ├── payments.html
-│   │   └── payouts.html
+│   ├── static/
 │   └── utils/
-│       ├── __init__.py
-│       ├── email.py
-│       └── browser.py
-├── migrations/                  # Database migration files
+│       ├── email.py         # sends verification codes
+│       ├── tokens.py        # code generation/hashing
+│       └── decorators.py    # admin_required, etc.
+├── migrations/
+├── config.py
+├── run.py
 ├── requirements.txt
-├── .env                         # Local secrets; NEVER commit
-├── .gitignore
-├── run.py                       # Local development entry point
-└── README.md
+├── .env.example
+└── DOCUMENTATION.md
 ```
 
-## Core Data Models
+## Setup
 
-### Committee
+### 1. Clone and install dependencies
 
-Stores committee-level configuration including name, total members, cycle frequency, start date, current cycle, and status.
-
-### Member
-
-Stores member-specific information such as name, contact details, joining date, position/order, and active status.
-
-### Payment
-
-Stores actual payment events including member_id, committee_id, cycle/period, amount_paid, payment_date, status, and notes.
-
-### Payout
-
-Stores which member receives the committee payout for a particular cycle/turn, the payout date, amount, and status.
-
-### Session / Browser Verification
-
-Stores information required to recognize a previously verified browser/session and support the new-browser email verification workflow.
-
-## Authentication Flow
-
-1. **Login:** Admin enters email and password.
-2. **Recognized browser:** If the browser/session is already verified, continue to the dashboard.
-3. **New browser:** Generate a short-lived verification code and send it to the registered email.
-4. **Verification:** Admin enters the code on the verification page.
-5. **Session approval:** Mark the browser/session as verified and allow access.
-6. **Logout:** Clear the authentication session.
-
-## Main Application Pages
-
-| Page         | Purpose                                                                    |
-| ------------ | -------------------------------------------------------------------------- |
-| Login        | Admin authentication                                                       |
-| Verification | Enter email verification code for an unrecognized browser                  |
-| Dashboard    | Overview of committee status, members, payments, current cycle, and payout |
-| Members      | Add, edit, deactivate, and view committee members                          |
-| Payments     | View cycles and record/check each member's payment status                  |
-| Payouts      | Manage the member receiving the payout for each cycle and payout records   |
-
-## Environment Variables
-
-```env
-FLASK_SECRET_KEY=your-secret-key
-TURSO_DATABASE_URL=your-turso-database-url
-TURSO_AUTH_TOKEN=your-turso-auth-token
-MAIL_SERVER=your-smtp-server
-MAIL_PORT=587
-MAIL_USERNAME=your-email
-MAIL_PASSWORD=your-email-password
-MAIL_DEFAULT_SENDER=your-email
+```bash
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-The exact database URI format depends on the selected Turso/SQLAlchemy integration. Keep all credentials in Render Environment Variables in production and in a local `.env` file during development.
+### 2. Create a Turso database
 
-## Render Deployment
-
-1. Push the project to GitHub.
-2. Create a Render Web Service connected to the repository.
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `gunicorn app:app` (if the Flask application object is exposed as `app`)
-5. Add Turso database URL and authentication token as Render environment variables.
-6. Add email/SMTP environment variables if email verification is enabled.
-7. Deploy and test login, browser verification, member management, payments, and payouts.
-
-## requirements.txt — Suggested Dependencies
-
-```
-Flask
-Flask-SQLAlchemy
-Flask-WTF
-WTForms
-python-dotenv
-gunicorn
-# Add the appropriate Turso/libSQL SQLAlchemy integration
-# Add email-related package if required by the chosen mail implementation
+```bash
+turso db create committee-app
+turso db show committee-app --url          # → TURSO_DATABASE_URL
+turso db tokens create committee-app       # → TURSO_AUTH_TOKEN
 ```
 
-## Security & Deployment Checklist
+### 3. Configure environment variables
 
-- [ ] Never commit `.env` or database authentication tokens.
-- [ ] Use a strong Flask `SECRET_KEY` in production.
-- [ ] Enable CSRF protection through Flask-WTF.
-- [ ] Hash passwords; never store plaintext passwords.
-- [ ] Make verification codes short-lived and invalidate them after successful use.
-- [ ] Rate-limit or otherwise protect repeated verification-code requests.
-- [ ] Use HTTPS in production.
-- [ ] Validate authorization on every admin-only route.
-- [ ] Use database migrations for schema changes.
+Copy `.env.example` to `.env` and fill in your values:
 
-## Recommended Development Order
-
-1. Set up Flask application factory and extensions.
-2. Configure Turso/SQLAlchemy connection.
-3. Create User, Committee, Member, Payment, Payout, and Session models.
-4. Implement migrations and initialize the database.
-5. Build authentication and new-browser email verification.
-6. Build committee and member management.
-7. Implement equal-payment cycle logic.
-8. Implement payment recording and status tracking.
-9. Implement payout management.
-10. Build dashboard summaries.
-11. Apply UI styling and responsive design.
-12. Test locally, deploy to Render, and test production environment variables.
-
-## Design Principle
-
-The committee defines one contribution amount, and every member has the same required contribution for each cycle. The database models the contribution amount at the committee level and uses payment records to track each member's individual payment status.
-
+```bash
+cp .env.example .env
 ```
 
+| Variable | Purpose |
+|---|---|
+| `SECRET_KEY` | Flask session signing key |
+| `TURSO_DATABASE_URL` | Turso database hostname |
+| `TURSO_AUTH_TOKEN` | Turso auth token |
+| `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | SMTP for sending login verification codes |
+| `ADMIN_EMAIL` | Where verification codes are sent |
+
+Without `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` set, the app falls back to a
+local SQLite file (`local_dev.db`) so you can develop offline.
+
+### 4. Initialize the database
+
+```bash
+flask db init
+flask db migrate -m "initial schema"
+flask db upgrade
 ```
+
+### 5. Create the admin account
+
+```bash
+flask shell
+>>> from app.extensions import db
+>>> from app.models.admin import Admin
+>>> a = Admin(username="admin", email="you@example.com")
+>>> a.set_password("choose-a-strong-password")
+>>> db.session.add(a); db.session.commit()
+```
+
+### 6. Run the dev server
+
+```bash
+flask --app run.py run --debug
+```
+
+Visit `http://127.0.0.1:5000`.
+
+## Deployment (Render + Turso)
+
+1. Push this repo to GitHub.
+2. Create a Render **Web Service** connected to the repo.
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `gunicorn run:app`
+3. Add all variables from `.env` as Render environment variables (never
+   commit `.env`).
+4. Deploy. The free web service sleeps after 15 minutes idle — fine for this
+   app, since it's only actively used a few days each period. Turso's free
+   database does not expire or pause, so data survives the dormant weeks
+   with no action needed.
+
+## Key Business Rules (enforced in routes, not just the UI)
+
+- Members can only be added/removed while a committee's `status == "active"`
+  **and** its start date hasn't passed yet.
+- A member can't be selected for payout twice in the same committee.
+- A committee auto-completes once every member's `has_received_package` is
+  `True`.
