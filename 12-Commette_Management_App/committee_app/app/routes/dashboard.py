@@ -48,7 +48,7 @@ def new_committee():
             name=form.name.data,
             start_date=form.start_date.data,
             frequency=form.frequency.data,
-            contribution_amount=float(form.contribution_amount.data),  # stored directly as PKR
+            contribution_amount=form.contribution_amount.data,  # stored directly as PKR
             target_member_count=form.target_member_count.data,
         )
         db.session.add(committee)
