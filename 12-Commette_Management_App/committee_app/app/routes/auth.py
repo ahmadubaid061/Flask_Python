@@ -1,16 +1,123 @@
-from flask import Blueprint
+from datetime import datetime, timedelta, timezone
+
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, make_response
+from flask_login import login_user, logout_user, current_user
+
+from app.extensions import db
+from app.models.admin import Admin
+from app.models.device_token import TrustedDevice, LoginVerification
+from app.forms.auth_forms import LoginForm, VerifyCodeForm
+from app.utils.tokens import generate_login_code, hash_code, generate_device_token
+from app.utils.email import send_login_code_email
 
 auth_bp = Blueprint("auth", __name__)
 
 
-@auth_bp.route("/login")
+@auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    # TODO: real login form + password check + trusted-device cookie check
-    # + email verification flow (see DOCUMENTATION.md section 4).
-    return {"status": "stub", "page": "login"}
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+
+    form = LoginForm()
+    if form.validate_on_submit():
+        admin = Admin.query.filter_by(username=form.username.data).first()
+
+        if admin is None or not admin.check_password(form.password.data):
+            flash("Incorrect username or password.", "error")
+            return render_template("auth/login.html", form=form)
+
+        # Check for a trusted-device cookie matching this admin
+        cookie_name = current_app.config["TRUSTED_DEVICE_COOKIE_NAME"]
+        device_token = request.cookies.get(cookie_name)
+        trusted = None
+        if device_token:
+            trusted = TrustedDevice.query.filter_by(
+                admin_id=admin.id, device_token=device_token
+            ).first()
+
+        if trusted:
+            trusted.last_used_at = datetime.now(timezone.utc)
+            db.session.commit()
+            login_user(admin)
+            return redirect(url_for("dashboard.index"))
+
+        # New/unrecognized browser: issue a code and email it
+        code = generate_login_code()
+        verification = LoginVerification(
+            admin_id=admin.id,
+            code_hash=hash_code(code),
+            expires_at=datetime.now(timezone.utc)
+            + timedelta(minutes=current_app.config["LOGIN_CODE_EXPIRY_MINUTES"]),
+        )
+        db.session.add(verification)
+        db.session.commit()
+
+        send_login_code_email(admin.email, code)
+
+        # Stash which admin is pending verification in the server-side
+        # session (not a cookie the user can tamper with)
+        session["pending_admin_id"] = admin.id
+        flash("A verification code has been emailed to you.", "info")
+        return redirect(url_for("auth.verify"))
+
+    return render_template("auth/login.html", form=form)
 
 
-@auth_bp.route("/verify")
+@auth_bp.route("/verify", methods=["GET", "POST"])
 def verify():
-    # TODO: 6-digit code entry form
-    return {"status": "stub", "page": "verify"}
+    admin_id = session.get("pending_admin_id")
+    if not admin_id:
+        return redirect(url_for("auth.login"))
+
+    form = VerifyCodeForm()
+    if form.validate_on_submit():
+        verification = (
+            LoginVerification.query.filter_by(admin_id=admin_id, consumed=False)
+            .order_by(LoginVerification.created_at.desc())
+            .first()
+        )
+
+        if verification is None or not verification.is_valid():
+            flash("That code has expired. Please log in again to get a new one.", "error")
+            session.pop("pending_admin_id", None)
+            return redirect(url_for("auth.login"))
+
+        if verification.code_hash != hash_code(form.code.data):
+            flash("Incorrect code. Please try again.", "error")
+            return render_template("auth/verify.html", form=form)
+
+        # Correct code: consume it, trust this device, log the admin in
+        verification.consumed = True
+
+        device_token = generate_device_token()
+        trusted_device = TrustedDevice(
+            admin_id=admin_id,
+            device_token=device_token,
+            user_agent=request.headers.get("User-Agent", "")[:255],
+        )
+        db.session.add(trusted_device)
+        db.session.commit()
+
+        admin = db.session.get(Admin, admin_id)
+        login_user(admin)
+        session.pop("pending_admin_id", None)
+
+        response = make_response(redirect(url_for("dashboard.index")))
+        max_age_days = current_app.config["TRUSTED_DEVICE_MAX_AGE_DAYS"]
+        response.set_cookie(
+            current_app.config["TRUSTED_DEVICE_COOKIE_NAME"],
+            device_token,
+            max_age=max_age_days * 24 * 60 * 60,
+            httponly=True,
+            secure=not current_app.debug,  # allow http on localhost in debug
+            samesite="Lax",
+        )
+        return response
+
+    return render_template("auth/verify.html", form=form)
+
+
+@auth_bp.route("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for("main.home"))
