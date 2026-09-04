@@ -36,6 +36,9 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return db.session.get(Admin, int(user_id))
 
+    from app.cli import register_commands
+    register_commands(app)
+
     # --- auto-create tables on startup ---
     # Scans every imported db.Model subclass and creates any table that
     # doesn't already exist in Turso. Does NOT alter existing tables if you
