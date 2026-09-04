@@ -11,7 +11,7 @@ class CommitteeForm(FlaskForm):
         choices=[("monthly", "Monthly"), ("weekly", "Weekly")],
         validators=[DataRequired()],
     )
-    # Entered in whole currency units in the form; converted to cents in the route.
+    # Entered and stored in whole PKR — no conversion needed.
     contribution_amount = IntegerField(
         "Contribution Amount (per member, per period)",
         validators=[DataRequired(), NumberRange(min=1)],
