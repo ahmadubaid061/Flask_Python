@@ -23,6 +23,15 @@ class CommitteeForm(FlaskForm):
     submit = SubmitField("Create Committee")
 
 
+class RenameCommitteeForm(FlaskForm):
+    """Deliberately just the name — start_date, frequency, and
+    contribution_amount are left uneditable after creation because changing
+    them would silently invalidate every period label and total already
+    calculated from them."""
+    name = StringField("Committee Name", validators=[DataRequired()])
+    submit = SubmitField("Save")
+
+
 class MemberForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     gender = SelectField(

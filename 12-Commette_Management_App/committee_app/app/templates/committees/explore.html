@@ -5,10 +5,25 @@
 <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
         <div class="flex items-center space-x-3">
-            <h1 class="text-2xl font-bold text-gray-900">{{ committee.name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900" id="committee-name-display">{{ committee.name }}</h1>
+            <button type="button" onclick="toggleRenameForm()"
+                class="text-xs text-indigo-600 hover:underline">Rename</button>
             <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">Period: {{ period
                 }}</span>
         </div>
+
+        <!-- Rename Committee Form (hidden by default) -->
+        <form id="rename-form" action="{{ url_for('dashboard.rename_committee', committee_id=committee.id) }}"
+            method="POST" class="hidden mt-2 flex items-center gap-2">
+            {{ rename_form.hidden_tag() }}
+            {{ rename_form.name(class="border border-gray-300 rounded-lg p-1.5 text-sm focus:ring-2
+            focus:ring-indigo-500 focus:outline-none") }}
+            <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">Save</button>
+            <button type="button" onclick="toggleRenameForm()"
+                class="text-xs text-gray-500 hover:underline">Cancel</button>
+        </form>
+
         <p class="text-sm text-gray-600 mt-1">Contribution: Rs. {{ "{:,.2f}".format(committee.contribution_amount) }} |
             Status: <span class="font-semibold uppercase text-xs">{{ committee.status }}</span></p>
     </div>
@@ -291,4 +306,11 @@
     <div class="p-6 text-sm text-gray-500">No data found for that period.</div>
     {% endif %}
 </div>
+
+<script>
+    function toggleRenameForm() {
+        document.getElementById('rename-form').classList.toggle('hidden');
+        document.getElementById('committee-name-display').classList.toggle('hidden');
+    }
+</script>
 {% endblock %}

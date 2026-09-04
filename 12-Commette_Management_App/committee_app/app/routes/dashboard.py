@@ -8,7 +8,7 @@ from app.models.committee import Committee
 from app.models.member import Member
 from app.models.payment import Payment
 from app.models.payout import Payout
-from app.forms.member_forms import CommitteeForm, MemberForm
+from app.forms.member_forms import CommitteeForm, MemberForm, RenameCommitteeForm
 from app.utils.periods import current_period_label, get_available_periods, get_period_summary
 
 # ✅ BLUEPRINT DEFINITION
@@ -38,7 +38,29 @@ def index():
     return render_template("main/index.html", committees=committees)
 
 
-# ------------------------------------------------------------ new committee
+# ------------------------------------------------------------- rename committee
+
+@dashboard_bp.route("/committee/<int:committee_id>/rename", methods=["POST"])
+@login_required
+def rename_committee(committee_id):
+    """Only the name is editable after creation — start_date, frequency,
+    and contribution_amount are left alone deliberately, since changing
+    them after payments/payouts have been recorded would invalidate all
+    the period math already tied to the original values."""
+    committee = _committee_or_404(committee_id)
+
+    form = RenameCommitteeForm()
+    if form.validate_on_submit():
+        committee.name = form.name.data
+        db.session.commit()
+        flash("Committee name updated.", "success")
+    else:
+        flash("Please enter a valid name.", "danger")
+
+    return redirect(url_for("dashboard.explore", committee_id=committee.id))
+
+
+# ------------------------------------------------------------- new committee
 
 @dashboard_bp.route("/committee/new", methods=["GET", "POST"])
 @login_required
@@ -89,6 +111,7 @@ def explore(committee_id):
         period=period,
         members_data=members_data,
         member_form=MemberForm(),
+        rename_form=RenameCommitteeForm(obj=committee),
         available_periods=available_periods,
         selected_period=selected_period,
         period_summary=period_summary,
