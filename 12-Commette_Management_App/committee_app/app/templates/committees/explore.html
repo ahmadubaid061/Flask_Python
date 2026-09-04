@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ committee.name }} - Explore{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <div class="flex items-center space-x-3">
+            <h1 class="text-2xl font-bold text-gray-900">{{ committee.name }}</h1>
+            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">Period: {{ period
+                }}</span>
+        </div>
+        <p class="text-sm text-gray-600 mt-1">Contribution: Rs. {{ "{:,.2f}".format(committee.contribution_amount) }} |
+            Status: <span class="font-semibold uppercase text-xs">{{ committee.status }}</span></p>
+    </div>
+    <a href="{{ url_for('dashboard.index') }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to
+        Dashboard</a>
+</div>
+
+<!-- Add Member Section -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">Add New Member</h2>
+    <form action="{{ url_for('dashboard.add_member', committee_id=committee.id) }}" method="POST"
+        class="flex flex-col sm:flex-row gap-3">
+        {{ member_form.hidden_tag() }}
+        <div class="flex-grow">
+            {{ member_form.name(class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500
+            focus:outline-none", placeholder="Member Full Name") }}
+        </div>
+        <div class="w-full sm:w-40">
+            {{ member_form.gender(class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500
+            focus:outline-none") }}
+        </div>
+        <button type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg transition {% if committee.is_locked %}opacity-50 cursor-not-allowed{% endif %}"
+            {% if committee.is_locked %}disabled{% endif %}>
+            Add Member
+        </button>
+    </form>
+    {% if committee.is_locked %}
+    <p class="text-xs text-red-600 mt-2">Members cannot be added or removed because the committee cycle is locked.</p>
+    {% endif %}
+</div>
+
+<!-- Members Table & Payout Panel -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-900">Members & Cycle Payments</h2>
+
+        <!-- Payout Trigger Form -->
+        <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST"
+            class="flex items-center gap-2">
+            <select name="member_id" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
+                <option value="">Select Member for Payout</option>
+                {% for item in members_data %}
+                {% if not item.member.has_received_package %}
+                <option value="{{ item.member.id }}">{{ item.member.name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <button type="submit"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
+                Record Payout
+            </button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
+                    <th class="p-4">Name</th>
+                    <th class="p-4">Gender</th>
+                    <th class="p-4">Current Period Status</th>
+                    <th class="p-4">Payout Received</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 text-sm">
+                {% for item in members_data %}
+                <tr>
+                    <td class="p-4 font-medium text-gray-900">{{ item.member.name }}</td>
+                    <td class="p-4 text-gray-600">{{ item.member.gender | capitalize }}</td>
+                    <td class="p-4">
+                        <form
+                            action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=item.member.id) }}"
+                            method="POST">
+                            <input type="hidden" name="paid"
+                                value="{{ 'false' if item.current_period_paid else 'true' }}">
+                            <button type="submit"
+                                class="px-3 py-1 rounded-full text-xs font-semibold {% if item.current_period_paid %}bg-green-100 text-green-800 hover:bg-green-200{% else %}bg-amber-100 text-amber-800 hover:bg-amber-200{% endif %} transition">
+                                {{ 'Paid' if item.current_period_paid else 'Mark as Paid' }}
+                            </button>
+                        </form>
+                    </td>
+                    <td class="p-4">
+                        {% if item.member.has_received_package %}
+                        <span
+                            class="text-xs font-medium bg-purple-100 text-purple-800 px-2.5 py-1 rounded-full">Received
+                            ({{ item.member.received_period }})</span>
+                        {% else %}
+                        <span class="text-xs text-gray-400">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <form
+                            action="{{ url_for('dashboard.remove_member', committee_id=committee.id, member_id=item.member.id) }}"
+                            method="POST" class="inline">
+                            <button type="submit"
+                                class="text-red-600 hover:text-red-800 text-xs font-medium {% if committee.is_locked %}opacity-50 cursor-not-allowed{% endif %}"
+                                {% if committee.is_locked %}disabled{% endif %}>Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="p-6 text-center text-gray-500">No members added to this committee yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
