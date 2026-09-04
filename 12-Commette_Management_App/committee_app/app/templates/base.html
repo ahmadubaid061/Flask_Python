@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Committee Manager{% endblock %}</title>
+    <!-- Tailwind CSS CDN for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+            <a href="{{ url_for('dashboard.index') }}" class="text-xl font-bold text-indigo-600">Committee Manager (PKR)</a>
+            <div>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard.index') }}" class="text-sm font-medium text-gray-700 hover:text-indigo-600 mr-4">Dashboard</a>
+                    <a href="{{ url_for('auth.logout') }}" class="text-sm font-medium text-red-600 hover:text-red-800">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message %}
+                    <div class="p-4 mb-3 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' or category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500">
+        &copy; 2026 Committee Management System. All rights reserved.
+    </footer>
+</body>
+</html>
