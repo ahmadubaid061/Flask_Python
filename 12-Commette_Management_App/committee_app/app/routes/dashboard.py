@@ -18,7 +18,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 # create-committee, etc.) exist and post through real <form> tags, remove
 # this line so CSRF protection applies here like it already does on
 # app/routes/auth.py.
-csrf.exempt(dashboard_bp)
+# csrf.exempt(dashboard_bp)
 
 
 def _committee_or_404(committee_id):
