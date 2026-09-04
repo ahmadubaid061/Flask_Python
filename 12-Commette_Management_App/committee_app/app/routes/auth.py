@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, make_response
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 
 from app.extensions import db
 from app.models.admin import Admin
 from app.models.device_token import TrustedDevice, LoginVerification
-from app.forms.auth_forms import LoginForm, VerifyCodeForm
+from app.forms.auth_forms import LoginForm, VerifyCodeForm, AddAdminForm
 from app.utils.tokens import generate_login_code, hash_code, generate_device_token
 from app.utils.email import send_login_code_email
 
@@ -137,3 +137,55 @@ def verify():
 def logout():
     logout_user()
     return redirect(url_for("main.home"))
+
+
+# ------------------------------------------------------------ manage admins
+
+@auth_bp.route("/admins", methods=["GET", "POST"])
+@login_required
+def manage_admins():
+    """Any logged-in admin can add another — there's no hierarchy/roles,
+    every admin has equal access to every committee. This is the
+    self-service replacement for the old CLI-only create_admin command."""
+    form = AddAdminForm()
+
+    if form.validate_on_submit():
+        existing = Admin.query.filter(
+            (Admin.username == form.username.data) | (Admin.email == form.email.data)
+        ).first()
+        if existing:
+            flash("An admin with that username or email already exists.", "danger")
+        else:
+            new_admin = Admin(username=form.username.data.strip(), email=form.email.data.strip())
+            new_admin.set_password(form.password.data)
+            db.session.add(new_admin)
+            db.session.commit()
+            flash(f"Admin '{new_admin.username}' added successfully.", "success")
+            return redirect(url_for("auth.manage_admins"))
+
+    admins = Admin.query.order_by(Admin.created_at.asc()).all()
+    return render_template("admin/index.html", form=form, admins=admins)
+
+
+@auth_bp.route("/admins/<int:admin_id>/delete", methods=["POST"])
+@login_required
+def delete_admin(admin_id):
+    admin_to_delete = db.session.get(Admin, admin_id)
+    if admin_to_delete is None:
+        flash("Admin not found.", "danger")
+        return redirect(url_for("auth.manage_admins"))
+
+    if Admin.query.count() <= 1:
+        flash("Can't remove the last remaining admin — the app would become inaccessible.", "danger")
+        return redirect(url_for("auth.manage_admins"))
+
+    was_self = admin_to_delete.id == current_user.id
+    db.session.delete(admin_to_delete)
+    db.session.commit()
+    flash(f"Admin '{admin_to_delete.username}' removed.", "info")
+
+    if was_self:
+        logout_user()
+        return redirect(url_for("auth.login"))
+
+    return redirect(url_for("auth.manage_admins"))
