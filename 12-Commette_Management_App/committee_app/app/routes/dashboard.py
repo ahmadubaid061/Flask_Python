@@ -34,7 +34,7 @@ def _member_or_404(committee, member_id):
 @login_required
 def index():
     committees = Committee.query.order_by(Committee.created_at.desc()).all()
-    return render_template("dashboard/index.html", committees=committees)
+    return render_template("main/index.html", committees=committees)
 
 
 # ------------------------------------------------------------ new committee
