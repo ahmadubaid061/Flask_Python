@@ -9,7 +9,7 @@ from app.models.member import Member
 from app.models.payment import Payment
 from app.models.payout import Payout
 from app.forms.member_forms import CommitteeForm, MemberForm
-from app.utils.periods import current_period_label
+from app.utils.periods import current_period_label, get_available_periods, get_period_summary
 
 # ✅ BLUEPRINT DEFINITION
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -76,12 +76,22 @@ def explore(committee_id):
             "current_period_paid": bool(payment and payment.paid),
         })
 
+    # --- period history lookup (dropdown of past weeks/months with data) ---
+    available_periods = get_available_periods(committee.id)
+    selected_period = request.args.get("period")
+    period_summary = None
+    if selected_period and selected_period in available_periods:
+        period_summary = get_period_summary(committee, selected_period)
+
     return render_template(
         "committees/explore.html",
         committee=committee,
         period=period,
         members_data=members_data,
-        member_form=MemberForm()
+        member_form=MemberForm(),
+        available_periods=available_periods,
+        selected_period=selected_period,
+        period_summary=period_summary,
     )
 
 

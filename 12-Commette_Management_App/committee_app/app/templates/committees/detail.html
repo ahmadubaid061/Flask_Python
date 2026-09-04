@@ -103,4 +103,104 @@
         </table>
     </div>
 </div>
+
+<!-- Period History -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+    <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 class="text-lg font-semibold text-gray-900">Period History</h2>
+
+        {% if available_periods %}
+        <form method="GET" action="{{ url_for('committees.detail', committee_id=committee.id) }}"
+            class="flex items-center gap-2">
+            <select name="period" onchange="this.form.submit()"
+                class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
+                <option value="">Select a period&hellip;</option>
+                {% for label in available_periods %}
+                <option value="{{ label }}" {% if label==selected_period %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% else %}
+        <span class="text-sm text-gray-500">No period data recorded yet.</span>
+        {% endif %}
+    </div>
+
+    {% if period_summary %}
+    <div class="p-6 border-b border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div>
+            <p class="text-xs uppercase tracking-wider text-gray-500">Period</p>
+            <p class="text-lg font-semibold text-gray-900">{{ period_summary.period_label }}</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-wider text-gray-500">Total Received</p>
+            <p class="text-lg font-semibold text-emerald-700">Rs. {{ "{:,.0f}".format(period_summary.total_received)
+                }}</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-wider text-gray-500">Expected</p>
+            <p class="text-lg font-semibold text-gray-700">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}
+            </p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-wider text-gray-500">Payout</p>
+            <p class="text-lg font-semibold text-purple-700">
+                {% if period_summary.total_payout %}
+                Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}
+                {% else %}
+                &mdash;
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% if period_summary.payouts %}
+    <div class="px-6 pt-4 text-sm text-gray-600">
+        Paid out to:
+        {% for p in period_summary.payouts %}
+        <span class="font-medium text-gray-900">
+            {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
+        </span>
+        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif
+        %}){% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse mt-2">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
+                    <th class="p-4">Name</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4">Amount</th>
+                    <th class="p-4">Paid Date</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 text-sm">
+                {% for row in period_summary.members_data %}
+                <tr>
+                    <td class="p-4 font-medium text-gray-900">{{ row.member.name }}</td>
+                    <td class="p-4">
+                        {% if row.paid %}
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Paid</span>
+                        {% else %}
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Not
+                            Paid</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-gray-700">
+                        {% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}
+                    </td>
+                    <td class="p-4 text-gray-500">
+                        {{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif selected_period %}
+    <div class="p-6 text-sm text-gray-500">No data found for that period.</div>
+    {% endif %}
+</div>
 {% endblock %}

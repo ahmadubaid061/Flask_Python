@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request
 
 from app.extensions import db
 from app.models.committee import Committee
 from app.models.payment import Payment
-from app.utils.periods import current_period_label
+from app.utils.periods import current_period_label, get_available_periods, get_period_summary
 
 committees_bp = Blueprint("committees", __name__)
 
@@ -53,9 +53,19 @@ def detail(committee_id):
             "share_pct": share_pct
         })
     
+    # --- period history lookup (dropdown of past weeks/months with data) ---
+    available_periods = get_available_periods(committee.id)
+    selected_period = request.args.get("period")
+    period_summary = None
+    if selected_period and selected_period in available_periods:
+        period_summary = get_period_summary(committee, selected_period)
+    
     return render_template(
         "committees/detail.html",
         committee=committee,
         period=period,
-        members_data=members_data
+        members_data=members_data,
+        available_periods=available_periods,
+        selected_period=selected_period,
+        period_summary=period_summary,
     )
