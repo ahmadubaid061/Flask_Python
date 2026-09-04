@@ -32,4 +32,11 @@ class LoginVerification(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def is_valid(self) -> bool:
-        return not self.consumed and datetime.now(timezone.utc) < self.expires_at
+        """Check if verification code is still valid (not expired and not consumed)."""
+        # Make expires_at timezone-aware if it's naive (for old database records)
+        expires_at = self.expires_at
+        if expires_at.tzinfo is None:
+            # If naive, assume UTC
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        return not self.consumed and datetime.now(timezone.utc) < expires_at
