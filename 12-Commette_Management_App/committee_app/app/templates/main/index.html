@@ -1,22 +1,72 @@
 {% extends "base.html" %}
-{% block title %}Welcome - Committee Manager{% endblock %}
+{% block title %}{% if current_user.is_authenticated %}Dashboard{% else %}Committees{% endif %} - Committee Manager{%
+endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto text-center py-12">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Digital Committee Management System</h1>
-    <p class="text-lg text-gray-600 mb-8">Efficiently track committee savings, contributions, cycles, and PKR payouts in
-        one place.</p>
-
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+            {% if current_user.is_authenticated %}Dashboard{% else %}Committees{% endif %}
+        </h1>
+        <p class="text-sm text-gray-600 mt-1">
+            {% if current_user.is_authenticated %}
+            Manage committees, members, payments, and payouts.
+            {% else %}
+            Browse committee status and member details below.
+            {% endif %}
+        </p>
+    </div>
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('dashboard.index') }}"
-        class="bg-indigo-600 text-white font-medium px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition">
-        Go to Dashboard &rarr;
+    <a href="{{ url_for('dashboard.new_committee') }}"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg shadow transition">
+        + New Committee
     </a>
     {% else %}
-    <a href="{{ url_for('auth.login') }}"
-        class="bg-indigo-600 text-white font-medium px-6 py-3 rounded-lg shadow hover:bg-indigo-700 transition">
-        Admin Login &rarr;
-    </a>
+    <a href="{{ url_for('auth.login') }}" class="text-sm text-indigo-600 hover:underline">Admin Login &rarr;</a>
     {% endif %}
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
+                    <th class="p-4">Name</th>
+                    <th class="p-4">Contribution</th>
+                    <th class="p-4">Frequency</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 text-sm">
+                {% for committee in committees %}
+                <tr>
+                    <td class="p-4 font-medium text-gray-900">{{ committee.name }}</td>
+                    <td class="p-4 text-gray-600">Rs. {{ "{:,.2f}".format(committee.contribution_amount) }}</td>
+                    <td class="p-4 text-gray-600 capitalize">{{ committee.frequency }}</td>
+                    <td class="p-4">
+                        <span
+                            class="px-2.5 py-0.5 text-xs font-medium rounded-full {% if committee.status == 'completed' %}bg-gray-100 text-gray-700{% else %}bg-emerald-100 text-emerald-800{% endif %} uppercase">
+                            {{ committee.status }}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right">
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard.explore', committee_id=committee.id) }}"
+                            class="text-indigo-600 hover:underline text-xs font-medium">Manage &rarr;</a>
+                        {% else %}
+                        <a href="{{ url_for('committees.detail', committee_id=committee.id) }}"
+                            class="text-indigo-600 hover:underline text-xs font-medium">View &rarr;</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="p-6 text-center text-gray-500">No committees yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
