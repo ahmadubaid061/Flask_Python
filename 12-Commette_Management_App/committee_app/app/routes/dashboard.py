@@ -215,7 +215,7 @@ def mark_payment(committee_id, member_id):
 @dashboard_bp.route("/committee/<int:committee_id>/payout", methods=["POST"])
 @login_required
 def record_payout(committee_id):
-    """Record payout to a member - only if all have paid full amount."""
+    """Record payout to a member - flexible logic with deadline check."""
     committee = _committee_or_404(committee_id)
     member_id = request.form.get("member_id", type=int)
     member = _member_or_404(committee, member_id) if member_id else None
@@ -231,7 +231,7 @@ def record_payout(committee_id):
         flash("This member has already received the payout in this cycle.", "warning")
         return redirect(url_for("dashboard.explore", committee_id=committee.id))
 
-    # ✅ CHECK 2: All members must have paid the full amount for this period
+    # ✅ CHECK 2: Calculate how many members have paid
     total_members = len(committee.members)
     paid_members = 0
     
@@ -243,15 +243,37 @@ def record_payout(committee_id):
         if payment and payment.paid:
             paid_members += 1
     
-    if paid_members != total_members:
+    # ✅ CHECK 3: Decide if payout can proceed
+    can_payout = False
+    payout_reason = ""
+    
+    if paid_members == total_members:
+        # All have paid - full amount available
+        can_payout = True
+        payout_reason = "✓ All members have paid"
+    elif paid_members > 0:
+        # Some have paid - partial payout allowed
+        # Warning: Not all members paid
         flash(
-            f"Cannot process payout yet. Only {paid_members}/{total_members} members have paid. "
-            f"All members must pay the full amount before any payout can be made.",
+            f"⚠️ Only {paid_members}/{total_members} members have paid. "
+            f"Proceeding with partial payout of collected amount.",
+            "warning"
+        )
+        can_payout = True
+        payout_reason = f"Partial - {paid_members}/{total_members} paid"
+    else:
+        # Nobody paid - cannot proceed
+        flash(
+            f"❌ No members have paid for {period} yet. "
+            f"Cannot proceed with payout.",
             "error"
         )
         return redirect(url_for("dashboard.explore", committee_id=committee.id))
 
-    # ✅ CHECK 3: Calculate total available for payout (all paid amounts for this period)
+    if not can_payout:
+        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+
+    # ✅ Calculate total available for payout (all paid amounts for this period)
     period_total = (
         db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0))
         .filter_by(committee_id=committee.id, period_label=period, paid=True)
@@ -275,7 +297,7 @@ def record_payout(committee_id):
 
     db.session.commit()
 
-    flash(f"✓ Payout of Rs. {period_total:,.0f} recorded for {member.name}!", "success")
+    flash(f"✓ Payout of Rs. {period_total:,.0f} recorded for {member.name}! ({payout_reason})", "success")
 
     # ✅ CHECK 4: If all members have received payout, reset for next cycle
     all_received = all(m.has_received_package for m in committee.members)
@@ -291,8 +313,6 @@ def record_payout(committee_id):
         flash(f"🔄 All members have received their payout! System reset for next cycle.", "info")
 
     return redirect(url_for("dashboard.explore", committee_id=committee.id))
-
-
 # ----------------------------------------------------------- reset payout (undo)
 
 @dashboard_bp.route("/committee/<int:committee_id>/members/<int:member_id>/reset-payout", methods=["POST"])
@@ -340,3 +360,40 @@ def delete_committee(committee_id):
     
     flash(f"Committee '{committee.name}' has been deleted.", "info")
     return redirect(url_for("dashboard.index"))
+
+# ----------------------------------------------------------- catch up payments
+
+@dashboard_bp.route("/committee/<int:committee_id>/members/<int:member_id>/catchup", methods=["GET", "POST"])
+@login_required
+def member_catchup(committee_id, member_id):
+    """Allow member to pay for past weeks they missed."""
+    committee = _committee_or_404(committee_id)
+    member = _member_or_404(committee, member_id)
+    
+    # Get all unpaid payments for this member
+    unpaid_payments = Payment.query.filter_by(
+        member_id=member.id,
+        paid=False
+    ).order_by(Payment.period_label.asc()).all()
+    
+    if request.method == "POST":
+        period_label = request.form.get("period_label")
+        
+        # Mark as paid
+        payment = Payment.query.filter_by(
+            member_id=member.id,
+            period_label=period_label
+        ).first()
+        
+        if payment:
+            payment.paid = True
+            payment.paid_date = date.today()
+            db.session.commit()
+            flash(f"Payment for {period_label} marked as paid.", "success")
+    
+    return render_template(
+        "members/catchup.html",
+        committee=committee,
+        member=member,
+        unpaid_payments=unpaid_payments
+    )
