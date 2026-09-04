@@ -15,8 +15,8 @@ def detail(committee_id):
     if committee is None:
         abort(404)
     
-    # Get current period label
-    period = current_period_label(committee.frequency)
+    # ✅ Pass committee.start_date to current_period_label
+    period = current_period_label(committee.frequency, committee.start_date)
     
     # Get total number of members
     total_members = len(committee.members)
