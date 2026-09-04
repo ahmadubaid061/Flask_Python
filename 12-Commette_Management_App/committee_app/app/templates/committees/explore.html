@@ -122,6 +122,12 @@
                             View
                         </a>
 
+                        <!-- Catch Up Button (Pay Past Dues) -->
+                        <a href="{{ url_for('dashboard.member_catchup', committee_id=committee.id, member_id=item.member.id) }}"
+                            class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                            Catch Up
+                        </a>
+
                         <!-- Reset Payout Button (if member has received payout) -->
                         {% if item.member.has_received_package %}
                         <form
