@@ -76,7 +76,7 @@ def explore(committee_id):
         })
 
     return render_template(
-        "dashboard/explore.html",
+        "committees/explore.html",
         committee=committee,
         period=period,
         members_data=members_data,
