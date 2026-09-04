@@ -41,3 +41,8 @@ class Config:
     TRUSTED_DEVICE_COOKIE_NAME = "committee_trusted_device"
     TRUSTED_DEVICE_MAX_AGE_DAYS = 30
     LOGIN_CODE_EXPIRY_MINUTES = 10
+
+    # --- Admin credentials from .env (for auto-initialization) ---
+    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+    ADMIN_EMAIL_FOR_LOGIN = os.environ.get("ADMIN_EMAIL_FOR_LOGIN")
