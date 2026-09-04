@@ -20,11 +20,24 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        admin = Admin.query.filter_by(username=form.username.data).first()
-
-        if admin is None or not admin.check_password(form.password.data):
+        username = form.username.data.strip()  # Remove any whitespace
+        print(f"[DEBUG] Login attempt with username: '{username}'")
+        
+        admin = Admin.query.filter_by(username=username).first()
+        
+        if admin is None:
+            print(f"[DEBUG] No admin found with username: '{username}'")
             flash("Incorrect username or password.", "error")
             return render_template("auth/login.html", form=form)
+        
+        print(f"[DEBUG] Admin found: {admin.username}, checking password...")
+        
+        if not admin.check_password(form.password.data):
+            print(f"[DEBUG] Password mismatch for user: {username}")
+            flash("Incorrect username or password.", "error")
+            return render_template("auth/login.html", form=form)
+
+        print(f"[DEBUG] Password verified for user: {username}")
 
         # Check for a trusted-device cookie matching this admin
         cookie_name = current_app.config["TRUSTED_DEVICE_COOKIE_NAME"]
@@ -36,12 +49,14 @@ def login():
             ).first()
 
         if trusted:
+            print(f"[DEBUG] Trusted device found, logging in directly...")
             trusted.last_used_at = datetime.now(timezone.utc)
             db.session.commit()
             login_user(admin)
             return redirect(url_for("dashboard.index"))
 
         # New/unrecognized browser: issue a code and email it
+        print(f"[DEBUG] New device, generating login code...")
         code = generate_login_code()
         verification = LoginVerification(
             admin_id=admin.id,
@@ -52,6 +67,7 @@ def login():
         db.session.add(verification)
         db.session.commit()
 
+        print(f"[DEBUG] Login code generated: {code}, sending email to {admin.email}...")
         send_login_code_email(admin.email, code)
 
         # Stash which admin is pending verification in the server-side
