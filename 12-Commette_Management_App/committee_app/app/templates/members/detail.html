@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ member.name }} - Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ member.name }}</h1>
+            <p class="text-sm text-gray-600">Committee: <a
+                    href="{{ url_for('dashboard.explore', committee_id=committee.id) }}"
+                    class="text-indigo-600 hover:underline font-medium">{{ committee.name }}</a></p>
+        </div>
+        <span
+            class="px-3 py-1 text-xs font-semibold rounded-full {% if member.has_received_package %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+            {{ 'Package Received' if member.has_received_package else 'Pending Payout' }}
+        </span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-medium">Total Contributed</p>
+            <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(total_contributed) }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-medium">Contribution Share</p>
+            <p class="text-lg font-bold text-gray-900">{{ share_pct }}%</p>
+        </div>
+    </div>
+
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">Period Payment History</h2>
+    <div class="border border-gray-200 rounded-lg overflow-hidden">
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-xs uppercase border-b border-gray-200">
+                    <th class="p-3">Period</th>
+                    <th class="p-3">Amount</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3">Paid Date</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for p in period_history %}
+                <tr>
+                    <td class="p-3 font-medium text-gray-900">{{ p.period_label }}</td>
+                    <td class="p-3">Rs. {{ "{:,.2f}".format(p.amount) }}</td>
+                    <td class="p-3">
+                        <span
+                            class="px-2 py-0.5 text-xs font-semibold rounded-full {% if p.paid %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                            {{ 'Paid' if p.paid else 'Unpaid' }}
+                        </span>
+                    </td>
+                    <td class="p-3 text-gray-500">{{ p.paid_date if p.paid_date else '-' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="p-4 text-center text-gray-500">No payment history recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
