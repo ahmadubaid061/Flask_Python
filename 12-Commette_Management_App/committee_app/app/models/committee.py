@@ -12,8 +12,8 @@ class Committee(db.Model):
     # "weekly" or "monthly" — decides how period labels are generated
     frequency = db.Column(db.String(10), nullable=False, default="monthly")
 
-    # Fixed amount every member pays each period, in cents (avoids float
-    # rounding bugs). Divide by 100 when displaying.
+    # Fixed amount every member pays each period, in plain PKR (no
+    # cents/paisa subunit used anywhere in this app — display as-is).
     contribution_amount = db.Column(db.Integer, nullable=False)
 
     start_date = db.Column(db.Date, nullable=False)
