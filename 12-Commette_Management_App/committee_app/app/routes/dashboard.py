@@ -84,6 +84,42 @@ def explore(committee_id):
     )
 
 
+# --------------------------------------------------------- member details view
+
+@dashboard_bp.route("/committee/<int:committee_id>/members/<int:member_id>")
+@login_required
+def member_details(committee_id, member_id):
+    """View detailed information about a specific member."""
+    committee = _committee_or_404(committee_id)
+    member = _member_or_404(committee, member_id)
+    
+    # Get all payments for this member
+    period_history = Payment.query.filter_by(member_id=member.id).order_by(Payment.period_label.desc()).all()
+    
+    # Calculate total contributed
+    total_contributed = sum(p.amount for p in period_history if p.paid)
+    
+    # Calculate share percentage (if committee has multiple members)
+    total_all_members = (
+        db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0))
+        .filter_by(committee_id=committee.id)
+        .scalar()
+    )
+    
+    share_pct = round(
+        (total_contributed / total_all_members * 100) if total_all_members > 0 else 0
+    )
+    
+    return render_template(
+        "members/detail.html",
+        committee=committee,
+        member=member,
+        period_history=period_history,
+        total_contributed=total_contributed,
+        share_pct=share_pct
+    )
+
+
 # ------------------------------------------------------------- add member
 
 @dashboard_bp.route("/committee/<int:committee_id>/members/new", methods=["POST"])
@@ -91,9 +127,7 @@ def explore(committee_id):
 def add_member(committee_id):
     committee = _committee_or_404(committee_id)
 
-    if committee.is_locked:
-        flash("Cannot add a member until the current cycle is completed.", "danger")
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+    # ✅ REMOVED: if committee.is_locked check - allow adding members anytime
 
     form = MemberForm()
     if form.validate_on_submit():
@@ -135,9 +169,7 @@ def remove_member(committee_id, member_id):
     committee = _committee_or_404(committee_id)
     member = _member_or_404(committee, member_id)
 
-    if committee.is_locked:
-        flash("Cannot remove a member until the current cycle is completed.", "danger")
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+    # ✅ REMOVED: if committee.is_locked check - allow removing members anytime
 
     db.session.delete(member)
     db.session.commit()
