@@ -7,7 +7,7 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-900">{{ member.name }}</h1>
             <p class="text-sm text-gray-600">Committee: <a
-                    href="{{ url_for('dashboard.explore', committee_id=committee.id) }}"
+                    href="{{ url_for('committees.detail', committee_id=committee.id) }}"
                     class="text-indigo-600 hover:underline font-medium">{{ committee.name }}</a></p>
         </div>
         <span
@@ -16,23 +16,38 @@
         </span>
     </div>
 
+    <!-- Stats Grid -->
     <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Total Contributed</p>
             <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(total_contributed) }}</p>
+            <p class="text-xs text-gray-500 mt-1">Paid amounts only</p>
         </div>
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Contribution Share</p>
-            <p class="text-lg font-bold text-gray-900">{{ share_pct }}%</p>
+            <p class="text-lg font-bold text-indigo-600">{{ share_pct }}%</p>
+            <p class="text-xs text-gray-500 mt-1">of total committee pool</p>
         </div>
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Expected Total</p>
             <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(expected_total) }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ number_of_cycles }} cycles × Rs. {{ "{:,.0f}".format(expected_total / number_of_cycles if number_of_cycles > 0 else 0) }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Payment Cycles</p>
-            <p class="text-lg font-bold text-gray-900">{{ period_history | length }}</p>
+            <p class="text-xs text-gray-500 uppercase font-medium">Committee Pool</p>
+            <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(total_pool) }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ total_members }} members × {{ number_of_cycles }} cycles</p>
         </div>
+    </div>
+
+    <!-- Contribution Breakdown -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <p class="text-sm font-semibold text-blue-900 mb-2">📊 How your percentage is calculated:</p>
+        <p class="text-sm text-blue-800">
+            <span class="font-mono">Your Contribution ÷ Total Committee Pool × 100</span>
+            <br>
+            <span class="font-mono">Rs. {{ "{:,.0f}".format(total_contributed) }} ÷ Rs. {{ "{:,.0f}".format(total_pool) }} × 100 = {{ share_pct }}%</span>
+        </p>
     </div>
 
     <h2 class="text-lg font-semibold text-gray-900 mb-3">Period Payment History</h2>
