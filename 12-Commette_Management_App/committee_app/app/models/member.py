@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-from flask_login import UserMixin
 from app.extensions import db
 
 
@@ -15,7 +14,5 @@ class Member(db.Model):
     gender = db.Column(db.String(20), nullable=True)
     has_received_package = db.Column(db.Boolean, default=False)
     received_period = db.Column(db.String(50), nullable=True)
-    payout_cycle = db.Column(db.Integer, default=1)  # Track which payout cycle they've received
+    payout_cycle = db.Column(db.Integer, default=1)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    committee = db.relationship("Committee", backref="members")
