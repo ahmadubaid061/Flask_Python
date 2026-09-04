@@ -124,7 +124,20 @@ def member_details(committee_id, member_id):
         expected_total=expected_total
     )
 
+# ----------------------------------------------------------- delete committee
 
+@dashboard_bp.route("/committee/<int:committee_id>/delete", methods=["POST"])
+@login_required
+def delete_committee(committee_id):
+    """Delete a committee and all associated data."""
+    committee = _committee_or_404(committee_id)
+    
+    # Delete the committee (cascade will delete members, payments, payouts)
+    db.session.delete(committee)
+    db.session.commit()
+    
+    flash(f"Committee '{committee.name}' has been deleted.", "info")
+    return redirect(url_for("dashboard.index"))
 # ------------------------------------------------------------- add member
 
 @dashboard_bp.route("/committee/<int:committee_id>/members/new", methods=["POST"])
