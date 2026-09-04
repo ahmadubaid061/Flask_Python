@@ -84,39 +84,44 @@ def explore(committee_id):
     )
 
 
-# --------------------------------------------------------- member details view
+# --------------------------------------------------------- member details view (PUBLIC - NO LOGIN REQUIRED)
 
 @dashboard_bp.route("/committee/<int:committee_id>/members/<int:member_id>")
-@login_required
 def member_details(committee_id, member_id):
-    """View detailed information about a specific member."""
+    """View detailed information about a specific member (PUBLIC VIEW)."""
     committee = _committee_or_404(committee_id)
     member = _member_or_404(committee, member_id)
     
     # Get all payments for this member
     period_history = Payment.query.filter_by(member_id=member.id).order_by(Payment.period_label.desc()).all()
     
-    # Calculate total contributed
-    total_contributed = sum(p.amount for p in period_history if p.paid)
+    # Calculate member's total contribution (only paid ones)
+    member_total_paid = sum(p.amount for p in period_history if p.paid)
     
-    # Calculate share percentage (if committee has multiple members)
+    # Calculate total all members paid (for committee)
     total_all_members = (
         db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0))
         .filter_by(committee_id=committee.id)
         .scalar()
     )
     
-    share_pct = round(
-        (total_contributed / total_all_members * 100) if total_all_members > 0 else 0
+    # Calculate percentage: (member's paid amount / total committee paid amount) * 100
+    # This is the user's contribution as a percentage of the total committee contributions
+    contribution_percentage = round(
+        (member_total_paid / total_all_members * 100) if total_all_members > 0 else 0
     )
+    
+    # Calculate expected total for this member (if they paid for all periods)
+    expected_total = len(period_history) * committee.contribution_amount
     
     return render_template(
         "members/detail.html",
         committee=committee,
         member=member,
         period_history=period_history,
-        total_contributed=total_contributed,
-        share_pct=share_pct
+        total_contributed=member_total_paid,
+        share_pct=contribution_percentage,
+        expected_total=expected_total
     )
 
 
@@ -126,8 +131,6 @@ def member_details(committee_id, member_id):
 @login_required
 def add_member(committee_id):
     committee = _committee_or_404(committee_id)
-
-    # ✅ REMOVED: if committee.is_locked check - allow adding members anytime
 
     form = MemberForm()
     if form.validate_on_submit():
@@ -168,8 +171,6 @@ def edit_member(committee_id, member_id):
 def remove_member(committee_id, member_id):
     committee = _committee_or_404(committee_id)
     member = _member_or_404(committee, member_id)
-
-    # ✅ REMOVED: if committee.is_locked check - allow removing members anytime
 
     db.session.delete(member)
     db.session.commit()
