@@ -46,5 +46,43 @@ def create_app(config_class=Config):
     # early development, same behavior as your previous app.
     with app.app_context():
         db.create_all()
+        
+        # --- Auto-initialize admin from .env if it doesn't exist ---
+        _initialize_admin_from_env(app)
 
     return app
+
+
+def _initialize_admin_from_env(app):
+    """Auto-create admin user from .env if credentials are provided and admin doesn't exist."""
+    from app.models.admin import Admin
+    
+    username = app.config.get("ADMIN_USERNAME")
+    password = app.config.get("ADMIN_PASSWORD")
+    email = app.config.get("ADMIN_EMAIL_FOR_LOGIN")
+    
+    # Check if all required credentials are in .env
+    if not all([username, password, email]):
+        print("[INFO] ⏭️  Skipping auto-admin creation: missing ADMIN_USERNAME, ADMIN_PASSWORD, or ADMIN_EMAIL_FOR_LOGIN in .env")
+        return
+    
+    # Check if admin already exists
+    existing_admin = Admin.query.filter_by(username=username).first()
+    if existing_admin:
+        print(f"[INFO] ✅ Admin '{username}' already exists in database")
+        return
+    
+    try:
+        # Create new admin from .env
+        admin = Admin(username=username, email=email)
+        admin.set_password(password)
+        
+        db.session.add(admin)
+        db.session.commit()
+        
+        print(f"[INFO] ✅ Auto-created admin from .env:")
+        print(f"       Username: {username}")
+        print(f"       Email: {email}")
+    except Exception as e:
+        print(f"[ERROR] ❌ Failed to auto-create admin: {str(e)}")
+        db.session.rollback()
