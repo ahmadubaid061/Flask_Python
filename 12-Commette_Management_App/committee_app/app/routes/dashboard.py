@@ -56,7 +56,7 @@ def new_committee():
         flash("Committee created successfully!", "success")
         return redirect(url_for("dashboard.explore", committee_id=committee.id))
 
-    return render_template("dashboard/new_committee.html", form=form)
+    return render_template("committees/new_committee.html", form=form)
 
 
 # ----------------------------------------------------------------- explore
