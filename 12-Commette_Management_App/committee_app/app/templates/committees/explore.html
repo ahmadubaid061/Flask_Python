@@ -49,6 +49,7 @@
         <!-- Payout Trigger Form -->
         <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST"
             class="flex items-center gap-2">
+            {{ member_form.hidden_tag() }}
             <select name="member_id" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
                 <option value="">Select Member for Payout</option>
                 {% for item in members_data %}
@@ -81,9 +82,11 @@
                     <td class="p-4 font-medium text-gray-900">{{ item.member.name }}</td>
                     <td class="p-4 text-gray-600">{{ item.member.gender | capitalize }}</td>
                     <td class="p-4">
+                        <!-- Mark as Paid Form - WITH CSRF TOKEN -->
                         <form
                             action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=item.member.id) }}"
                             method="POST">
+                            {{ member_form.hidden_tag() }}
                             <input type="hidden" name="paid"
                                 value="{{ 'false' if item.current_period_paid else 'true' }}">
                             <button type="submit"
@@ -102,12 +105,17 @@
                         {% endif %}
                     </td>
                     <td class="p-4 text-right space-x-2">
+                        <!-- Remove Member Form - WITH CSRF TOKEN -->
                         <form
                             action="{{ url_for('dashboard.remove_member', committee_id=committee.id, member_id=item.member.id) }}"
-                            method="POST" class="inline">
+                            method="POST" class="inline"
+                            onsubmit="return confirm('Are you sure you want to remove {{ item.member.name }}?');">
+                            {{ member_form.hidden_tag() }}
                             <button type="submit"
                                 class="text-red-600 hover:text-red-800 text-xs font-medium {% if committee.is_locked %}opacity-50 cursor-not-allowed{% endif %}"
-                                {% if committee.is_locked %}disabled{% endif %}>Remove</button>
+                                {% if committee.is_locked %}disabled{% endif %}>
+                                Remove
+                            </button>
                         </form>
                     </td>
                 </tr>
