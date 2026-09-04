@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ committee.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex items-center space-x-3">
+        <h1 class="text-2xl font-bold text-gray-900">{{ committee.name }}</h1>
+        <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">Period: {{ period
+            }}</span>
+    </div>
+    <p class="text-sm text-gray-600 mt-1">
+        Contribution: Rs. {{ "{:,.2f}".format(committee.contribution_amount) }} |
+        Status: <span class="font-semibold uppercase text-xs">{{ committee.status }}</span> |
+        Frequency: <span class="capitalize">{{ committee.frequency }}</span>
+    </p>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="p-6 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Members</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
+                    <th class="p-4">Name</th>
+                    <th class="p-4">Gender</th>
+                    <th class="p-4">Payout Received</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 text-sm">
+                {% for member in committee.members %}
+                <tr>
+                    <td class="p-4 font-medium text-gray-900">{{ member.name }}</td>
+                    <td class="p-4 text-gray-600">{{ member.gender | capitalize }}</td>
+                    <td class="p-4">
+                        {% if member.has_received_package %}
+                        <span class="text-xs font-medium bg-purple-100 text-purple-800 px-2.5 py-1 rounded-full">
+                            Received ({{ member.received_period }})
+                        </span>
+                        {% else %}
+                        <span class="text-xs text-gray-400">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="p-6 text-center text-gray-500">No members in this committee yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
