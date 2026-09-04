@@ -25,6 +25,14 @@
             <p class="text-xs text-gray-500 uppercase font-medium">Contribution Share</p>
             <p class="text-lg font-bold text-gray-900">{{ share_pct }}%</p>
         </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-medium">Expected Total</p>
+            <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(expected_total) }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-medium">Payment Cycles</p>
+            <p class="text-lg font-bold text-gray-900">{{ period_history | length }}</p>
+        </div>
     </div>
 
     <h2 class="text-lg font-semibold text-gray-900 mb-3">Period Payment History</h2>
@@ -49,7 +57,7 @@
                             {{ 'Paid' if p.paid else 'Unpaid' }}
                         </span>
                     </td>
-                    <td class="p-3 text-gray-500">{{ p.paid_date if p.paid_date else '-' }}</td>
+                    <td class="p-3 text-gray-500">{{ p.paid_date.strftime('%d %b %Y') if p.paid_date else '-' }}</td>
                 </tr>
                 {% else %}
                 <tr>
