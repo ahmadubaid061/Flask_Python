@@ -77,7 +77,7 @@ def explore(committee_id):
         })
 
     # --- period history lookup (dropdown of past weeks/months with data) ---
-    available_periods = get_available_periods(committee.id)
+    available_periods = get_available_periods(committee)
     selected_period = request.args.get("period")
     period_summary = None
     if selected_period and selected_period in available_periods:
@@ -198,7 +198,14 @@ def remove_member(committee_id, member_id):
 def mark_payment(committee_id, member_id):
     committee = _committee_or_404(committee_id)
     member = _member_or_404(committee, member_id)
-    period = current_period_label(committee.frequency, committee.start_date)
+
+    # If a period_label is passed explicitly (e.g. from the Period History
+    # panel, used to backfill a past week), act on that period instead of
+    # today's live one. This is what lets an admin fill in W1-W4 for a
+    # committee that was backdated when it was added to the app.
+    period = request.form.get("period_label") or current_period_label(
+        committee.frequency, committee.start_date
+    )
 
     paid = request.form.get("paid", "true").lower() != "false"
 
@@ -216,8 +223,12 @@ def mark_payment(committee_id, member_id):
     payment.paid_date = date.today() if paid else None
     db.session.commit()
 
-    flash(f"Payment status updated for {member.name}.", "success")
-    return redirect(url_for("dashboard.explore", committee_id=committee.id))
+    flash(f"Payment status updated for {member.name} ({period}).", "success")
+
+    redirect_kwargs = {"committee_id": committee.id}
+    if request.form.get("period_label"):
+        redirect_kwargs["period"] = period
+    return redirect(url_for("dashboard.explore", **redirect_kwargs))
 
 
 # ----------------------------------------------------------------- payout
@@ -234,7 +245,14 @@ def record_payout(committee_id):
         flash("Member ID is required for payout.", "danger")
         return redirect(url_for("dashboard.explore", committee_id=committee.id))
 
-    period = current_period_label(committee.frequency, committee.start_date)
+    # Same idea as mark_payment: an explicit period_label (from the Period
+    # History panel) lets the admin backfill a payout for a past period,
+    # e.g. one that happened offline before the committee was added here.
+    # It's treated exactly like a live payout — same checks, same effect
+    # on cycle tracking below — so the rotation stays accurate afterward.
+    period = request.form.get("period_label") or current_period_label(
+        committee.frequency, committee.start_date
+    )
 
     # ✅ CHECK 1: Member hasn't received payout in this cycle
     if member.has_received_package:
@@ -307,7 +325,7 @@ def record_payout(committee_id):
 
     db.session.commit()
 
-    flash(f"✓ Payout of Rs. {period_total:,.0f} recorded for {member.name}! ({payout_reason})", "success")
+    flash(f"✓ Payout of Rs. {period_total:,.0f} recorded for {member.name} ({period})! ({payout_reason})", "success")
 
     # ✅ CHECK 4: If all members have received payout, reset for next cycle
     all_received = all(m.has_received_package for m in committee.members)
@@ -322,7 +340,10 @@ def record_payout(committee_id):
         db.session.commit()
         flash(f"🔄 All members have received their payout! System reset for next cycle.", "info")
 
-    return redirect(url_for("dashboard.explore", committee_id=committee.id))
+    redirect_kwargs = {"committee_id": committee.id}
+    if request.form.get("period_label"):
+        redirect_kwargs["period"] = period
+    return redirect(url_for("dashboard.explore", **redirect_kwargs))
 # ----------------------------------------------------------- reset payout (undo)
 
 @dashboard_bp.route("/committee/<int:committee_id>/members/<int:member_id>/reset-payout", methods=["POST"])

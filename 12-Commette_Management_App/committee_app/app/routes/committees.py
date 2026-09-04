@@ -54,7 +54,7 @@ def detail(committee_id):
         })
     
     # --- period history lookup (dropdown of past weeks/months with data) ---
-    available_periods = get_available_periods(committee.id)
+    available_periods = get_available_periods(committee)
     selected_period = request.args.get("period")
     period_summary = None
     if selected_period and selected_period in available_periods:

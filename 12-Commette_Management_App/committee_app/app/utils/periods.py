@@ -8,23 +8,40 @@ def _period_sort_key(label: str) -> int:
     return int(digits) if digits.isdigit() else 0
 
 
-def get_available_periods(committee_id: int) -> list[str]:
-    """Distinct period labels that have at least one payment or payout
-    recorded for this committee, most recent first. A period with zero
-    activity (nobody has paid, no payout made) simply won't appear here —
-    there's nothing to show for it yet."""
+def generate_elapsed_periods(frequency: str, start_date: date, on_date: date = None) -> list[str]:
+    """All period labels from period 1 up to and including the current one,
+    based purely on start_date/frequency — regardless of whether any data
+    has been recorded for them. This is what makes a backdated committee
+    (e.g. start_date 4 weeks ago) show W1..W5 as selectable from day one,
+    even though W1-W4 have no records yet."""
+    current_label = current_period_label(frequency, start_date, on_date)
+    prefix = current_label[0]
+    current_number = int(current_label[1:]) if current_label[1:].isdigit() else 1
+    return [f"{prefix}{n}" for n in range(1, current_number + 1)]
+
+
+def get_available_periods(committee) -> list[str]:
+    """Every period the committee has reached so far (from start_date up to
+    the current period), most recent first. This is a superset of periods
+    that actually have payment/payout data — a freshly backdated committee
+    will show all its past periods as selectable, empty, ready to be filled
+    in by the admin."""
     from app.models.payment import Payment
     from app.models.payout import Payout
 
+    elapsed = set(generate_elapsed_periods(committee.frequency, committee.start_date))
+
+    # Safety net: include any recorded labels that fall outside the normal
+    # elapsed range too (shouldn't normally happen, but never hide real data).
     payment_labels = {
         row[0] for row in Payment.query.with_entities(Payment.period_label)
-        .filter_by(committee_id=committee_id).distinct()
+        .filter_by(committee_id=committee.id).distinct()
     }
     payout_labels = {
         row[0] for row in Payout.query.with_entities(Payout.period_label)
-        .filter_by(committee_id=committee_id).distinct()
+        .filter_by(committee_id=committee.id).distinct()
     }
-    labels = payment_labels | payout_labels
+    labels = elapsed | payment_labels | payout_labels
     return sorted(labels, key=_period_sort_key, reverse=True)
 
 

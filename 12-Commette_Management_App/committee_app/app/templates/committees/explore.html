@@ -212,18 +212,40 @@
         </div>
     </div>
 
-    {% if period_summary.payouts %}
-    <div class="px-6 pt-4 text-sm text-gray-600">
-        Paid out to:
-        {% for p in period_summary.payouts %}
-        <span class="font-medium text-gray-900">
-            {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
-        </span>
-        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif
-        %}){% if not loop.last %}, {% endif %}
-        {% endfor %}
+    <div class="px-6 pt-4 flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-gray-600">
+        {% if period_summary.payouts %}
+        <div>
+            Paid out to:
+            {% for p in period_summary.payouts %}
+            <span class="font-medium text-gray-900">
+                {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
+            </span>
+            (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{%
+            endif %}){% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Record Payout for THIS period (e.g. backfilling a payout that
+             already happened offline before this committee was added). -->
+        <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST"
+            class="flex items-center gap-2 sm:ml-auto">
+            {{ member_form.hidden_tag() }}
+            <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
+            <select name="member_id" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
+                <option value="">Record payout for {{ period_summary.period_label }}&hellip;</option>
+                {% for member in committee.members %}
+                {% if not member.has_received_package %}
+                <option value="{{ member.id }}">{{ member.name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <button type="submit"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
+                Record Payout
+            </button>
+        </form>
     </div>
-    {% endif %}
 
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse mt-2">
@@ -240,12 +262,19 @@
                 <tr>
                     <td class="p-4 font-medium text-gray-900">{{ row.member.name }}</td>
                     <td class="p-4">
-                        {% if row.paid %}
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Paid</span>
-                        {% else %}
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Not
-                            Paid</span>
-                        {% endif %}
+                        <!-- Mark paid/unpaid for THIS specific period, not
+                             just today's live one. -->
+                        <form
+                            action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=row.member.id) }}"
+                            method="POST">
+                            {{ member_form.hidden_tag() }}
+                            <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
+                            <input type="hidden" name="paid" value="{{ 'false' if row.paid else 'true' }}">
+                            <button type="submit"
+                                class="px-3 py-1 rounded-full text-xs font-semibold {% if row.paid %}bg-green-100 text-green-800 hover:bg-green-200{% else %}bg-amber-100 text-amber-800 hover:bg-amber-200{% endif %} transition">
+                                {{ 'Paid' if row.paid else 'Mark as Paid' }}
+                            </button>
+                        </form>
                     </td>
                     <td class="p-4 text-gray-700">
                         {% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}
