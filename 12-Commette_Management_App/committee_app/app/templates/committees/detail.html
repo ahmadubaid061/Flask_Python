@@ -58,6 +58,7 @@
                     <th class="p-4">Gender</th>
                     <th class="p-4">Current Period ({{ period }})</th>
                     <th class="p-4">Total Paid</th>
+                    <th class="p-4">Share %</th>
                     <th class="p-4">Status</th>
                     <th class="p-4 text-right">Action</th>
                 </tr>
@@ -78,6 +79,7 @@
                         </span>
                     </td>
                     <td class="p-4 font-semibold text-indigo-600">Rs. {{ "{:,.0f}".format(item.total_paid) }}</td>
+                    <td class="p-4 font-semibold text-blue-600">{{ item.share_pct }}%</td>
                     <td class="p-4">
                         {% if item.member.has_received_package %}
                         <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
@@ -98,7 +100,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="p-6 text-center text-gray-500">No members in this committee yet.</td>
+                    <td colspan="7" class="p-6 text-center text-gray-500">No members in this committee yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>
