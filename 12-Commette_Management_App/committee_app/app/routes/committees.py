@@ -18,6 +18,16 @@ def detail(committee_id):
     # Get current period label
     period = current_period_label(committee.frequency)
     
+    # Get total number of members
+    total_members = len(committee.members)
+    
+    # Get all payments to calculate total pool
+    all_payments = Payment.query.filter_by(committee_id=committee.id).all()
+    number_of_cycles = len(set(p.period_label for p in all_payments)) if all_payments else 0
+    
+    # Calculate total pool
+    total_pool = committee.contribution_amount * total_members * number_of_cycles if number_of_cycles > 0 else 0
+    
     # Get all members with their payment info for current period
     members_data = []
     for member in committee.members:
@@ -28,13 +38,19 @@ def detail(committee_id):
         ).first()
         
         # Get all payments to calculate total
-        all_payments = Payment.query.filter_by(member_id=member.id).all()
-        total_paid = sum(p.amount for p in all_payments if p.paid)
+        all_member_payments = Payment.query.filter_by(member_id=member.id).all()
+        total_paid = sum(p.amount for p in all_member_payments if p.paid)
+        
+        # Calculate percentage
+        share_pct = round(
+            (total_paid / total_pool * 100) if total_pool > 0 else 0
+        )
         
         members_data.append({
             "member": member,
             "current_period_paid": bool(current_payment and current_payment.paid),
-            "total_paid": total_paid
+            "total_paid": total_paid,
+            "share_pct": share_pct
         })
     
     return render_template(
