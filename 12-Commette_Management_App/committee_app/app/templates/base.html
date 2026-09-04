@@ -30,7 +30,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        {% for category, message %}
+        {% for category, message in messages %}
         <div
             class="p-4 mb-3 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' or category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
             {{ message }}
