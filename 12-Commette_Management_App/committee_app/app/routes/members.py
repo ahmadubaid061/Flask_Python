@@ -1,12 +1,10 @@
 from flask import Blueprint, abort, render_template
-from flask_login import login_required
 from app.models.member import Member
 
 members_bp = Blueprint("members", __name__)
 
 
 @members_bp.route("/<int:member_id>")
-@login_required
 def detail(member_id):
     member = Member.query.get(member_id)
     if member is None:
