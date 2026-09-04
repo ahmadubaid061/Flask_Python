@@ -31,7 +31,8 @@
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Expected Total</p>
             <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(expected_total) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ number_of_cycles }} cycles × Rs. {{ "{:,.0f}".format(expected_total / number_of_cycles if number_of_cycles > 0 else 0) }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ number_of_cycles }} cycles × Rs. {{ "{:,.0f}".format(expected_total
+                / number_of_cycles if number_of_cycles > 0 else 0) }}</p>
         </div>
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Committee Pool</p>
@@ -46,7 +47,8 @@
         <p class="text-sm text-blue-800">
             <span class="font-mono">Your Contribution ÷ Total Committee Pool × 100</span>
             <br>
-            <span class="font-mono">Rs. {{ "{:,.0f}".format(total_contributed) }} ÷ Rs. {{ "{:,.0f}".format(total_pool) }} × 100 = {{ share_pct }}%</span>
+            <span class="font-mono">Rs. {{ "{:,.0f}".format(total_contributed) }} ÷ Rs. {{ "{:,.0f}".format(total_pool)
+                }} × 100 = {{ share_pct }}%</span>
         </p>
     </div>
 

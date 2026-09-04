@@ -15,18 +15,16 @@
                 <span class="font-medium">Period:</span> {{ period }}
             </p>
         </div>
-        <span
-            class="px-3 py-1 text-sm font-semibold rounded-full {% if committee.status == 'completed' %}bg-gray-100 text-gray-700{% else %}bg-emerald-100 text-emerald-800{% endif %}">
+        <span class="px-3 py-1 text-sm font-semibold rounded-full {% if committee.status == 'completed' %}bg-gray-100 text-gray-700{% else %}bg-emerald-100 text-emerald-800{% endif %}">
             {{ committee.status | capitalize }}
         </span>
     </div>
-
+    
     <!-- Committee Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Contribution</p>
-            <p class="text-lg font-bold text-gray-900 mt-1">Rs. {{ "{:,.0f}".format(committee.contribution_amount) }}
-            </p>
+            <p class="text-lg font-bold text-gray-900 mt-1">Rs. {{ "{:,.0f}".format(committee.contribution_amount) }}</p>
         </div>
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Frequency</p>
@@ -38,8 +36,7 @@
         </div>
         <div>
             <p class="text-xs text-gray-500 uppercase font-medium">Started</p>
-            <p class="text-lg font-bold text-gray-900 mt-1">{{ committee.start_date.strftime('%d %b %Y') if
-                committee.start_date else 'N/A' }}</p>
+            <p class="text-lg font-bold text-gray-900 mt-1">{{ committee.start_date.strftime('%d %b %Y') if committee.start_date else 'N/A' }}</p>
         </div>
     </div>
 </div>
@@ -49,7 +46,7 @@
     <div class="p-6 border-b border-gray-200">
         <h2 class="text-lg font-semibold text-gray-900">Members</h2>
     </div>
-
+    
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
@@ -69,8 +66,7 @@
                     <td class="p-4 font-medium text-gray-900">{{ item.member.name }}</td>
                     <td class="p-4 text-gray-600">{{ item.member.gender | capitalize }}</td>
                     <td class="p-4">
-                        <span
-                            class="px-2.5 py-1 text-xs font-semibold rounded-full {% if item.current_period_paid %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {% if item.current_period_paid %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
                             {% if item.current_period_paid %}
                             ✓ Paid
                             {% else %}
