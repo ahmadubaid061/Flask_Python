@@ -53,18 +53,36 @@ def detail(committee_id):
             "share_pct": share_pct
         })
     
-    # --- period history lookup (dropdown of past weeks/months with data) ---
-    available_periods = get_available_periods(committee)
-    selected_period = request.args.get("period")
-    period_summary = None
-    if selected_period and selected_period in available_periods:
-        period_summary = get_period_summary(committee, selected_period)
-    
     return render_template(
         "committees/detail.html",
         committee=committee,
         period=period,
         members_data=members_data,
+    )
+
+
+@committees_bp.route("/<int:committee_id>/history")
+def period_history(committee_id):
+    """Public, read-only period history page — separate from detail() for
+    the same reason as the admin version: keeping it off the live-period
+    page means a visitor searching an old week never sees it rendered
+    directly under the current week's status and confuses the two."""
+    committee = db.session.get(Committee, committee_id)
+    if committee is None:
+        abort(404)
+
+    available_periods = get_available_periods(committee)
+    selected_period = request.args.get("period")
+    if not selected_period and available_periods:
+        selected_period = available_periods[0]
+
+    period_summary = None
+    if selected_period and selected_period in available_periods:
+        period_summary = get_period_summary(committee, selected_period)
+
+    return render_template(
+        "committees/public_period_history.html",
+        committee=committee,
         available_periods=available_periods,
         selected_period=selected_period,
         period_summary=period_summary,

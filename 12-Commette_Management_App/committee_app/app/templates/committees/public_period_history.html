@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ committee.name }} - Period History{% endblock %}
+
+{% block content %}
+<div class="stripe"></div>
+
+<div style="margin-bottom:14px;">
+    <a href="{{ url_for('committees.detail', committee_id=committee.id) }}" class="link">&larr; Back to {{ committee.name }}</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">{{ committee.name }} &middot; Period History</div>
+
+        {% if available_periods %}
+        <form method="GET" action="{{ url_for('committees.period_history', committee_id=committee.id) }}" class="inline-form" style="flex-wrap:wrap;">
+            <select name="period" onchange="this.form.submit()">
+                {% for label in available_periods %}
+                <option value="{{ label }}" {% if label==selected_period %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% else %}
+        <span class="muted" style="font-size:13px;">No period data recorded yet.</span>
+        {% endif %}
+    </div>
+
+    {% if period_summary %}
+    <div class="stat-row" style="margin-bottom:14px;">
+        <div class="stat">
+            <div class="label">Period</div>
+            <div class="val">{{ period_summary.period_label }}</div>
+        </div>
+        <div class="stat">
+            <div class="label">Total received</div>
+            <div class="val teal">Rs. {{ "{:,.0f}".format(period_summary.total_received) }}</div>
+        </div>
+        <div class="stat">
+            <div class="label">Expected</div>
+            <div class="val">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}</div>
+        </div>
+        <div class="stat">
+            <div class="label">Payout</div>
+            <div class="val marigold">
+                {% if period_summary.total_payout %}Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}{% else %}&mdash;{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if period_summary.payouts %}
+    <div class="muted" style="font-size:13px; margin-bottom:12px;">
+        Paid out to:
+        {% for p in period_summary.payouts %}
+        <span style="font-weight:700; color:var(--ink);">
+            {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
+        </span>
+        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif %}){% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Paid date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in period_summary.members_data %}
+                <tr>
+                    <td data-label="Name">{{ row.member.name }}</td>
+                    <td data-label="Status">
+                        <span class="pill {{ 'paid' if row.paid else 'due' }}">{{ 'Paid' if row.paid else 'Not paid' }}</span>
+                    </td>
+                    <td data-label="Amount">{% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}</td>
+                    <td data-label="Paid date">{{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif selected_period %}
+    <div class="empty-note">No data found for that period.</div>
+    {% else %}
+    <div class="empty-note">No periods to show yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

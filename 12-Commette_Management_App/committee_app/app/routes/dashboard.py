@@ -278,10 +278,14 @@ def mark_payment(committee_id, member_id):
 
     flash(f"Payment status updated for {member.name} ({period}).", "success")
 
-    redirect_kwargs = {"committee_id": committee.id}
+    # This form is only ever submitted with a period_label from the Period
+    # History page (explore's own "mark as paid" form never sends one, since
+    # it always acts on the live period) — so its presence tells us to send
+    # the admin back to the history view, on the period they were working
+    # on, instead of bouncing them to explore every single click.
     if request.form.get("period_label"):
-        redirect_kwargs["period"] = period
-    return redirect(url_for("dashboard.explore", **redirect_kwargs))
+        return redirect(url_for("dashboard.period_history", committee_id=committee.id, period=period))
+    return redirect(url_for("dashboard.explore", committee_id=committee.id))
 
 
 # ----------------------------------------------------------------- payout
@@ -294,9 +298,24 @@ def record_payout(committee_id):
     member_id = request.form.get("member_id", type=int)
     member = _member_or_404(committee, member_id) if member_id else None
 
+    # Same signal used in mark_payment: a period_label in the form only ever
+    # comes from the Period History page's payout form, so use it to send
+    # the admin back there (on the period they were working on) instead of
+    # bouncing every action to explore.
+    came_from_history = bool(request.form.get("period_label"))
+
+    def _back():
+        if came_from_history:
+            return redirect(url_for(
+                "dashboard.period_history",
+                committee_id=committee.id,
+                period=request.form.get("period_label"),
+            ))
+        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+
     if member is None:
         flash("Member ID is required for payout.", "danger")
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+        return _back()
 
     # Same idea as mark_payment: an explicit period_label (from the Period
     # History panel) lets the admin backfill a payout for a past period,
@@ -310,7 +329,7 @@ def record_payout(committee_id):
     # ✅ CHECK 1: Member hasn't received payout in this cycle
     if member.has_received_package:
         flash("This member has already received the payout in this cycle.", "warning")
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+        return _back()
 
     # ✅ CHECK 1b: No one else has already received the payout for THIS period.
     # This is the rule that was missing — without it, every member whose own
@@ -328,7 +347,7 @@ def record_payout(committee_id):
             f"Only one member can receive the payout per period.",
             "warning",
         )
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+        return _back()
 
     # ✅ CHECK 2: Calculate how many members have paid
     total_members = len(committee.members)
@@ -367,10 +386,10 @@ def record_payout(committee_id):
             f"Cannot proceed with payout.",
             "error"
         )
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+        return _back()
 
     if not can_payout:
-        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+        return _back()
 
     # ✅ Calculate total available for payout (all paid amounts for this period)
     period_total = (
@@ -426,10 +445,7 @@ def record_payout(committee_id):
         db.session.commit()
         flash(f"🔄 All members have received their payout! System reset for next cycle.", "info")
 
-    redirect_kwargs = {"committee_id": committee.id}
-    if request.form.get("period_label"):
-        redirect_kwargs["period"] = period
-    return redirect(url_for("dashboard.explore", **redirect_kwargs))
+    return _back()
 # ----------------------------------------------------------- reset payout (undo)
 
 @dashboard_bp.route("/committee/<int:committee_id>/members/<int:member_id>/reset-payout", methods=["POST"])
