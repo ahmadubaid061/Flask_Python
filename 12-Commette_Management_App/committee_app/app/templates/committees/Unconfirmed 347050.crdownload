@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ committee.name }} - Period History{% endblock %}
+
+{% block content %}
+<div class="stripe"></div>
+
+<div class="page-head">
+    <div class="title-block">
+        <h1>{{ committee.name }} &middot; Period History</h1>
+        <p class="sub">Browse and backfill any past week/month on its own — separate from the live current period.</p>
+    </div>
+    <div class="page-head-actions">
+        <a href="{{ url_for('dashboard.explore', committee_id=committee.id) }}" class="link">&larr; Back to {{ committee.name }}</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Select a period</div>
+
+        {% if available_periods %}
+        <form method="GET" action="{{ url_for('dashboard.period_history', committee_id=committee.id) }}" class="inline-form"
+            style="flex-wrap:wrap;">
+            <select name="period" onchange="this.form.submit()">
+                {% for label in available_periods %}
+                <option value="{{ label }}" {% if label==selected_period %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% else %}
+        <span class="muted" style="font-size:13px;">No period data recorded yet.</span>
+        {% endif %}
+    </div>
+
+    {% if period_summary %}
+    <div class="stat-row" style="margin-bottom:16px;">
+        <div class="stat">
+            <div class="label">Period</div>
+            <div class="val">{{ period_summary.period_label }}</div>
+        </div>
+        <div class="stat">
+            <div class="label">Total received</div>
+            <div class="val teal">Rs. {{ "{:,.0f}".format(period_summary.total_received) }}</div>
+        </div>
+        <div class="stat">
+            <div class="label">Expected</div>
+            <div class="val">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}</div>
+        </div>
+        <div class="stat">
+            <div class="label">Payout</div>
+            <div class="val marigold">
+                {% if period_summary.total_payout %}Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}{% else %}&mdash;{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if period_summary.payouts %}
+    <div class="muted" style="font-size:13px; margin-bottom:14px;">
+        Paid out to:
+        {% for p in period_summary.payouts %}
+        <span style="font-weight:700; color:var(--ink);">
+            {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
+        </span>
+        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif %}){% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Record Payout for THIS (historical) period -->
+    {% if not period_summary.payouts %}
+    <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST" class="inline-form"
+        style="margin-bottom:16px; flex-wrap:wrap;">
+        {{ member_form.hidden_tag() }}
+        <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
+        <select name="member_id">
+            <option value="">Record payout for {{ period_summary.period_label }}&hellip;</option>
+            {% for member in committee.members %}
+            {% if not member.has_received_package %}
+            <option value="{{ member.id }}">{{ member.name }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Record payout</button>
+    </form>
+    {% endif %}
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Paid date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in period_summary.members_data %}
+                <tr>
+                    <td data-label="Name">{{ row.member.name }}</td>
+                    <td data-label="Status">
+                        <form action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=row.member.id) }}"
+                            method="POST">
+                            {{ member_form.hidden_tag() }}
+                            <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
+                            <input type="hidden" name="paid" value="{{ 'false' if row.paid else 'true' }}">
+                            <button type="submit" class="pill {{ 'paid' if row.paid else 'due' }}">
+                                {{ 'Paid' if row.paid else 'Mark as paid' }}
+                            </button>
+                        </form>
+                    </td>
+                    <td data-label="Amount">{% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}</td>
+                    <td data-label="Paid date">{{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif selected_period %}
+    <div class="empty-note">No data found for that period.</div>
+    {% else %}
+    <div class="empty-note">No periods to show yet.</div>
+    {% endif %}
+</div>
+{% endblock %}
