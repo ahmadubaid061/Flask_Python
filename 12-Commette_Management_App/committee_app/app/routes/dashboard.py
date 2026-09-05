@@ -98,6 +98,14 @@ def explore(committee_id):
             "current_period_paid": bool(payment and payment.paid),
         })
 
+    # Has a payout already been recorded for the current live period? Used to
+    # hide/disable the "Record payout" form once one member has been paid for
+    # this period, instead of just relying on the record_payout route to
+    # reject it after the fact.
+    current_period_payout = Payout.query.filter_by(
+        committee_id=committee.id, period_label=period
+    ).first()
+
     # --- period history lookup (dropdown of past weeks/months with data) ---
     available_periods = get_available_periods(committee)
     selected_period = request.args.get("period")
@@ -115,6 +123,7 @@ def explore(committee_id):
         available_periods=available_periods,
         selected_period=selected_period,
         period_summary=period_summary,
+        current_period_payout=current_period_payout,
     )
 
 
@@ -280,6 +289,24 @@ def record_payout(committee_id):
     # ✅ CHECK 1: Member hasn't received payout in this cycle
     if member.has_received_package:
         flash("This member has already received the payout in this cycle.", "warning")
+        return redirect(url_for("dashboard.explore", committee_id=committee.id))
+
+    # ✅ CHECK 1b: No one else has already received the payout for THIS period.
+    # This is the rule that was missing — without it, every member whose own
+    # has_received_package is still False (i.e. everyone except whoever just
+    # got paid) remains selectable, so a second, third, etc. member could be
+    # paid out for the same week/month. Only one payout is allowed per period.
+    existing_payout_for_period = Payout.query.filter_by(
+        committee_id=committee.id, period_label=period
+    ).first()
+    if existing_payout_for_period:
+        existing_member = db.session.get(Member, existing_payout_for_period.member_id)
+        existing_name = existing_member.name if existing_member else "another member"
+        flash(
+            f"A payout for {period} has already been recorded ({existing_name}). "
+            f"Only one member can receive the payout per period.",
+            "warning",
+        )
         return redirect(url_for("dashboard.explore", committee_id=committee.id))
 
     # ✅ CHECK 2: Calculate how many members have paid
