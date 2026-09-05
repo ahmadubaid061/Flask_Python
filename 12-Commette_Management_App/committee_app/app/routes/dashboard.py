@@ -106,13 +106,6 @@ def explore(committee_id):
         committee_id=committee.id, period_label=period
     ).first()
 
-    # --- period history lookup (dropdown of past weeks/months with data) ---
-    available_periods = get_available_periods(committee)
-    selected_period = request.args.get("period")
-    period_summary = None
-    if selected_period and selected_period in available_periods:
-        period_summary = get_period_summary(committee, selected_period)
-
     return render_template(
         "committees/explore.html",
         committee=committee,
@@ -120,10 +113,38 @@ def explore(committee_id):
         members_data=members_data,
         member_form=MemberForm(),
         rename_form=RenameCommitteeForm(obj=committee),
+        current_period_payout=current_period_payout,
+    )
+
+
+# ------------------------------------------------------------ period history
+
+@dashboard_bp.route("/committee/<int:committee_id>/history")
+@login_required
+def period_history(committee_id):
+    """Standalone page for browsing a past period's payments/payout, kept
+    separate from explore() so the live current-period panel never sits
+    above a historical period the admin just searched for — that layout on
+    the old combined page was the source of the 'which week am I even
+    looking at' confusion."""
+    committee = _committee_or_404(committee_id)
+
+    available_periods = get_available_periods(committee)
+    selected_period = request.args.get("period")
+    if not selected_period and available_periods:
+        selected_period = available_periods[0]
+
+    period_summary = None
+    if selected_period and selected_period in available_periods:
+        period_summary = get_period_summary(committee, selected_period)
+
+    return render_template(
+        "committees/period_history.html",
+        committee=committee,
+        member_form=MemberForm(),
         available_periods=available_periods,
         selected_period=selected_period,
         period_summary=period_summary,
-        current_period_payout=current_period_payout,
     )
 
 
@@ -378,7 +399,22 @@ def record_payout(committee_id):
     flash(f"✓ Payout of Rs. {period_total:,.0f} recorded for {member.name} ({period})! ({payout_reason})", "success")
 
     # ✅ CHECK 4: If all members have received payout, reset for next cycle
-    all_received = all(m.has_received_package for m in committee.members)
+    #
+    # BUGFIX: this used to check `all(m.has_received_package for m in
+    # committee.members)` on its own. That only looks at whoever currently
+    # exists in the committee — if the committee is meant to eventually hold
+    # more members than have been added so far, every existing member could
+    # receive a payout and trigger a "full cycle" reset early. Anyone already
+    # paid in that short cycle then looks eligible again immediately, even
+    # though members intended for the rotation haven't received anything
+    # yet. Requiring the live member count to reach target_member_count
+    # (falling back to the live count when no target was set) closes that.
+    required_members = committee.target_member_count or total_members
+    all_received = (
+        total_members > 0
+        and total_members >= required_members
+        and all(m.has_received_package for m in committee.members)
+    )
     
     if all_received:
         # Reset all members for next cycle
