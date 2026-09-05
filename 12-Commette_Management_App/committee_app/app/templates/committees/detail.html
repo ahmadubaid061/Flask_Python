@@ -2,101 +2,89 @@
 {% block title %}{{ committee.name }} - Public View{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <a href="{{ url_for('main.home') }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Committees</a>
+<div class="stripe"></div>
+
+<div style="margin-bottom:14px;">
+    <a href="{{ url_for('main.home') }}" class="link">&larr; Back to committees</a>
 </div>
 
 <!-- Committee Header -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">{{ committee.name }}</h1>
-            <p class="text-sm text-gray-600 mt-2">
-                <span class="font-medium">Period:</span> {{ period }}
-            </p>
+<div class="card">
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+            <div>
+                <h1 style="font-size:24px;">{{ committee.name }}</h1>
+                <p class="sub" style="margin-top:6px;"><span style="font-weight:700;">Period:</span> {{ period }}</p>
+            </div>
+            <span class="pill {% if committee.status == 'completed' %}pending{% else %}paid{% endif %}">
+                {{ committee.status | capitalize }}
+            </span>
         </div>
-        <span class="px-3 py-1 text-sm font-semibold rounded-full {% if committee.status == 'completed' %}bg-gray-100 text-gray-700{% else %}bg-emerald-100 text-emerald-800{% endif %}">
-            {{ committee.status | capitalize }}
-        </span>
     </div>
-    
+
     <!-- Committee Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Contribution</p>
-            <p class="text-lg font-bold text-gray-900 mt-1">Rs. {{ "{:,.0f}".format(committee.contribution_amount) }}</p>
+    <div class="stat-row mt-16" style="padding-top:16px; border-top:1px solid var(--line);">
+        <div class="stat">
+            <div class="label">Contribution</div>
+            <div class="val">Rs. {{ "{:,.0f}".format(committee.contribution_amount) }}</div>
         </div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Frequency</p>
-            <p class="text-lg font-bold text-gray-900 mt-1">{{ committee.frequency | capitalize }}</p>
+        <div class="stat">
+            <div class="label">Frequency</div>
+            <div class="val">{{ committee.frequency | capitalize }}</div>
         </div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Total Members</p>
-            <p class="text-lg font-bold text-gray-900 mt-1">{{ committee.members | length }}</p>
+        <div class="stat">
+            <div class="label">Total members</div>
+            <div class="val">{{ committee.members | length }}</div>
         </div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Started</p>
-            <p class="text-lg font-bold text-gray-900 mt-1">{{ committee.start_date.strftime('%d %b %Y') if committee.start_date else 'N/A' }}</p>
+        <div class="stat">
+            <div class="label">Started</div>
+            <div class="val" style="font-size:16px;">{{ committee.start_date.strftime('%d %b %Y') if committee.start_date else 'N/A' }}</div>
         </div>
     </div>
 </div>
 
 <!-- Members Table -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-    <div class="p-6 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Members</h2>
-    </div>
-    
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+<div class="card">
+    <div class="card-title" style="margin-bottom:14px;">Members</div>
+    <div class="table-wrap">
+        <table class="data-table">
             <thead>
-                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
-                    <th class="p-4">Name</th>
-                    <th class="p-4">Gender</th>
-                    <th class="p-4">Current Period ({{ period }})</th>
-                    <th class="p-4">Total Paid</th>
-                    <th class="p-4">Share %</th>
-                    <th class="p-4">Status</th>
-                    <th class="p-4 text-right">Action</th>
+                <tr>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>{{ period }}</th>
+                    <th>Total paid</th>
+                    <th>Share</th>
+                    <th>Payout</th>
+                    <th></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 text-sm">
+            <tbody>
                 {% for item in members_data %}
                 <tr>
-                    <td class="p-4 font-medium text-gray-900">{{ item.member.name }}</td>
-                    <td class="p-4 text-gray-600">{{ item.member.gender | capitalize }}</td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {% if item.current_period_paid %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
-                            {% if item.current_period_paid %}
-                            ✓ Paid
-                            {% else %}
-                            ⏱ Pending
-                            {% endif %}
+                    <td data-label="Name">{{ item.member.name }}</td>
+                    <td data-label="Gender">{{ item.member.gender | capitalize }}</td>
+                    <td data-label="This period">
+                        <span class="pill {{ 'paid' if item.current_period_paid else 'due' }}">
+                            {{ 'Paid' if item.current_period_paid else 'Pending' }}
                         </span>
                     </td>
-                    <td class="p-4 font-semibold text-indigo-600">Rs. {{ "{:,.0f}".format(item.total_paid) }}</td>
-                    <td class="p-4 font-semibold text-blue-600">{{ item.share_pct }}%</td>
-                    <td class="p-4">
+                    <td data-label="Total paid" style="font-weight:700; color:var(--teal);">Rs. {{ "{:,.0f}".format(item.total_paid) }}</td>
+                    <td data-label="Share">{{ item.share_pct }}%</td>
+                    <td data-label="Payout">
                         {% if item.member.has_received_package %}
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                            ✓ Received
-                        </span>
+                        <span class="pill received">Received</span>
                         {% else %}
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700">
-                            Pending
-                        </span>
+                        <span class="pill pending">Pending</span>
                         {% endif %}
                     </td>
-                    <td class="p-4 text-right">
-                        <a href="{{ url_for('dashboard.member_details', committee_id=committee.id, member_id=item.member.id) }}"
-                            class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">
-                            View Details →
-                        </a>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('dashboard.member_details', committee_id=committee.id, member_id=item.member.id) }}" class="link">Details</a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="p-6 text-center text-gray-500">No members in this committee yet.</td>
+                    <td colspan="7" class="no-label"><div class="empty-note">No members in this committee yet.</div></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -105,15 +93,13 @@
 </div>
 
 <!-- Period History -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
-    <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 class="text-lg font-semibold text-gray-900">Period History</h2>
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Period history</div>
 
         {% if available_periods %}
-        <form method="GET" action="{{ url_for('committees.detail', committee_id=committee.id) }}"
-            class="flex items-center gap-2">
-            <select name="period" onchange="this.form.submit()"
-                class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
+        <form method="GET" action="{{ url_for('committees.detail', committee_id=committee.id) }}" class="inline-form" style="flex-wrap:wrap;">
+            <select name="period" onchange="this.form.submit()">
                 <option value="">Select a period&hellip;</option>
                 {% for label in available_periods %}
                 <option value="{{ label }}" {% if label==selected_period %}selected{% endif %}>{{ label }}</option>
@@ -121,86 +107,70 @@
             </select>
         </form>
         {% else %}
-        <span class="text-sm text-gray-500">No period data recorded yet.</span>
+        <span class="muted" style="font-size:13px;">No period data recorded yet.</span>
         {% endif %}
     </div>
 
     {% if period_summary %}
-    <div class="p-6 border-b border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Period</p>
-            <p class="text-lg font-semibold text-gray-900">{{ period_summary.period_label }}</p>
+    <div class="stat-row" style="margin-bottom:14px;">
+        <div class="stat">
+            <div class="label">Period</div>
+            <div class="val">{{ period_summary.period_label }}</div>
         </div>
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Total Received</p>
-            <p class="text-lg font-semibold text-emerald-700">Rs. {{ "{:,.0f}".format(period_summary.total_received)
-                }}</p>
+        <div class="stat">
+            <div class="label">Total received</div>
+            <div class="val teal">Rs. {{ "{:,.0f}".format(period_summary.total_received) }}</div>
         </div>
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Expected</p>
-            <p class="text-lg font-semibold text-gray-700">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}
-            </p>
+        <div class="stat">
+            <div class="label">Expected</div>
+            <div class="val">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}</div>
         </div>
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Payout</p>
-            <p class="text-lg font-semibold text-purple-700">
-                {% if period_summary.total_payout %}
-                Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}
-                {% else %}
-                &mdash;
-                {% endif %}
-            </p>
+        <div class="stat">
+            <div class="label">Payout</div>
+            <div class="val marigold">
+                {% if period_summary.total_payout %}Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}{% else %}&mdash;{% endif %}
+            </div>
         </div>
     </div>
 
     {% if period_summary.payouts %}
-    <div class="px-6 pt-4 text-sm text-gray-600">
+    <div class="muted" style="font-size:13px; margin-bottom:12px;">
         Paid out to:
         {% for p in period_summary.payouts %}
-        <span class="font-medium text-gray-900">
+        <span style="font-weight:700; color:var(--ink);">
             {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
         </span>
-        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif
-        %}){% if not loop.last %}, {% endif %}
+        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif %}){% if not loop.last %}, {% endif %}
         {% endfor %}
     </div>
     {% endif %}
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse mt-2">
+    <div class="table-wrap">
+        <table class="data-table">
             <thead>
-                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
-                    <th class="p-4">Name</th>
-                    <th class="p-4">Status</th>
-                    <th class="p-4">Amount</th>
-                    <th class="p-4">Paid Date</th>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Paid date</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 text-sm">
+            <tbody>
                 {% for row in period_summary.members_data %}
                 <tr>
-                    <td class="p-4 font-medium text-gray-900">{{ row.member.name }}</td>
-                    <td class="p-4">
-                        {% if row.paid %}
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Paid</span>
-                        {% else %}
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Not
-                            Paid</span>
-                        {% endif %}
+                    <td data-label="Name">{{ row.member.name }}</td>
+                    <td data-label="Status">
+                        <span class="pill {{ 'paid' if row.paid else 'due' }}">{{ 'Paid' if row.paid else 'Not paid' }}</span>
                     </td>
-                    <td class="p-4 text-gray-700">
-                        {% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}
-                    </td>
-                    <td class="p-4 text-gray-500">
-                        {{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}
-                    </td>
+                    <td data-label="Amount">{% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}</td>
+                    <td data-label="Paid date">{{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% elif selected_period %}
-    <div class="p-6 text-sm text-gray-500">No data found for that period.</div>
+    <div class="empty-note">No data found for that period.</div>
     {% endif %}
 </div>
 {% endblock %}

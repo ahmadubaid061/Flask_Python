@@ -5,50 +5,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Committee Manager{% endblock %}</title>
-    <!-- Tailwind CSS CDN for rapid styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+<body>
     <!-- Navbar -->
-    <nav class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+    <nav class="navbar">
+        <div class="container navbar-inner">
             <a href="{{ url_for('dashboard.index') if current_user.is_authenticated else url_for('main.home') }}"
-                class="text-xl font-bold text-indigo-600">Committee Manager (PKR)</a>
-            <div>
-                {% if current_user.is_authenticated %}
-                <a href="{{ url_for('dashboard.index') }}"
-                    class="text-sm font-medium text-gray-700 hover:text-indigo-600 mr-4">Dashboard</a>
-                <a href="{{ url_for('auth.manage_admins') }}"
-                    class="text-sm font-medium text-gray-700 hover:text-indigo-600 mr-4">Admins</a>
-                <a href="{{ url_for('auth.logout') }}"
-                    class="text-sm font-medium text-red-600 hover:text-red-800">Logout</a>
-                {% endif %}
+                class="brand">Committee Manager</a>
+
+            {% if current_user.is_authenticated %}
+            <div class="nav-links">
+                <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                <a href="{{ url_for('auth.manage_admins') }}">Admins</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+            </div>
+            <button class="nav-toggle" type="button" onclick="document.getElementById('mobileMenu').classList.toggle('open')" aria-label="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            {% endif %}
+        </div>
+        {% if current_user.is_authenticated %}
+        <div class="container">
+            <div class="mobile-menu" id="mobileMenu">
+                <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                <a href="{{ url_for('auth.manage_admins') }}">Admins</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
             </div>
         </div>
+        {% endif %}
     </nav>
 
     <!-- Flash Messages -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+    <div class="container flash-wrap">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
-        <div
-            class="p-4 mb-3 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' or category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
-            {{ message }}
-        </div>
+        <div class="flash {{ category }}">{{ message }}</div>
         {% endfor %}
         {% endif %}
         {% endwith %}
     </div>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        {% block content %}{% endblock %}
+    <main class="content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500">
+    <footer class="footer">
         &copy; 2026 Committee Management System. All rights reserved.
     </footer>
 </body>

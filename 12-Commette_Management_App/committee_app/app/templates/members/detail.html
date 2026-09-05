@@ -2,83 +2,74 @@
 {% block title %}{{ member.name }} - Profile{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-    <div class="flex justify-between items-start mb-6">
+<div class="card max-w-lg">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ member.name }}</h1>
-            <p class="text-sm text-gray-600">Committee: <a
-                    href="{{ url_for('committees.detail', committee_id=committee.id) }}"
-                    class="text-indigo-600 hover:underline font-medium">{{ committee.name }}</a></p>
+            <h1 style="font-size:22px;">{{ member.name }}</h1>
+            <p class="sub">Committee: <a href="{{ url_for('committees.detail', committee_id=committee.id) }}" class="link">{{ committee.name }}</a></p>
         </div>
-        <span
-            class="px-3 py-1 text-xs font-semibold rounded-full {% if member.has_received_package %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-            {{ 'Package Received' if member.has_received_package else 'Pending Payout' }}
+        <span class="pill {{ 'received' if member.has_received_package else 'pending' }}">
+            {{ 'Package received' if member.has_received_package else 'Pending payout' }}
         </span>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Total Contributed</p>
-            <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(total_contributed) }}</p>
-            <p class="text-xs text-gray-500 mt-1">Paid amounts only</p>
+    <div class="stat-row" style="background:var(--bg); padding:14px; border-radius:var(--radius-md); margin-bottom:16px;">
+        <div class="stat">
+            <div class="label">Total contributed</div>
+            <div class="val">Rs. {{ "{:,.2f}".format(total_contributed) }}</div>
+            <div class="hint">Paid amounts only</div>
         </div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Contribution Share</p>
-            <p class="text-lg font-bold text-indigo-600">{{ share_pct }}%</p>
-            <p class="text-xs text-gray-500 mt-1">of total committee pool</p>
+        <div class="stat">
+            <div class="label">Contribution share</div>
+            <div class="val teal">{{ share_pct }}%</div>
+            <div class="hint">of total committee pool</div>
         </div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Expected Total</p>
-            <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(expected_total) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ number_of_cycles }} cycles × Rs. {{ "{:,.0f}".format(expected_total
-                / number_of_cycles if number_of_cycles > 0 else 0) }}</p>
+        <div class="stat">
+            <div class="label">Expected total</div>
+            <div class="val">Rs. {{ "{:,.2f}".format(expected_total) }}</div>
+            <div class="hint">{{ number_of_cycles }} cycles &times; Rs. {{ "{:,.0f}".format(expected_total / number_of_cycles if number_of_cycles > 0 else 0) }}</div>
         </div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase font-medium">Committee Pool</p>
-            <p class="text-lg font-bold text-gray-900">Rs. {{ "{:,.2f}".format(total_pool) }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ total_members }} members × {{ number_of_cycles }} cycles</p>
+        <div class="stat">
+            <div class="label">Committee pool</div>
+            <div class="val">Rs. {{ "{:,.2f}".format(total_pool) }}</div>
+            <div class="hint">{{ total_members }} members &times; {{ number_of_cycles }} cycles</div>
         </div>
     </div>
 
     <!-- Contribution Breakdown -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <p class="text-sm font-semibold text-blue-900 mb-2">📊 How your percentage is calculated:</p>
-        <p class="text-sm text-blue-800">
-            <span class="font-mono">Your Contribution ÷ Total Committee Pool × 100</span>
-            <br>
-            <span class="font-mono">Rs. {{ "{:,.0f}".format(total_contributed) }} ÷ Rs. {{ "{:,.0f}".format(total_pool)
-                }} × 100 = {{ share_pct }}%</span>
+    <div style="background:var(--marigold-bg); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
+        <p style="font-size:13px; font-weight:700; color:#8a6112; margin-bottom:6px;">How your percentage is calculated</p>
+        <p style="font-size:13px; color:#8a6112; font-family:monospace; line-height:1.6;">
+            Your contribution ÷ total committee pool &times; 100<br>
+            Rs. {{ "{:,.0f}".format(total_contributed) }} ÷ Rs. {{ "{:,.0f}".format(total_pool) }} &times; 100 = {{ share_pct }}%
         </p>
     </div>
 
-    <h2 class="text-lg font-semibold text-gray-900 mb-3">Period Payment History</h2>
-    <div class="border border-gray-200 rounded-lg overflow-hidden">
-        <table class="w-full text-left border-collapse text-sm">
+    <div class="card-title" style="margin-bottom:10px;">Period payment history</div>
+    <div class="table-wrap">
+        <table class="data-table">
             <thead>
-                <tr class="bg-gray-50 text-gray-600 text-xs uppercase border-b border-gray-200">
-                    <th class="p-3">Period</th>
-                    <th class="p-3">Amount</th>
-                    <th class="p-3">Status</th>
-                    <th class="p-3">Paid Date</th>
+                <tr>
+                    <th>Period</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Paid date</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody>
                 {% for p in period_history %}
                 <tr>
-                    <td class="p-3 font-medium text-gray-900">{{ p.period_label }}</td>
-                    <td class="p-3">Rs. {{ "{:,.2f}".format(p.amount) }}</td>
-                    <td class="p-3">
-                        <span
-                            class="px-2 py-0.5 text-xs font-semibold rounded-full {% if p.paid %}bg-green-100 text-green-800{% else %}bg-amber-100 text-amber-800{% endif %}">
-                            {{ 'Paid' if p.paid else 'Unpaid' }}
-                        </span>
+                    <td data-label="Period">{{ p.period_label }}</td>
+                    <td data-label="Amount">Rs. {{ "{:,.2f}".format(p.amount) }}</td>
+                    <td data-label="Status">
+                        <span class="pill {{ 'paid' if p.paid else 'due' }}">{{ 'Paid' if p.paid else 'Unpaid' }}</span>
                     </td>
-                    <td class="p-3 text-gray-500">{{ p.paid_date.strftime('%d %b %Y') if p.paid_date else '-' }}</td>
+                    <td data-label="Paid date">{{ p.paid_date.strftime('%d %b %Y') if p.paid_date else '-' }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4" class="p-4 text-center text-gray-500">No payment history recorded yet.</td>
+                    <td colspan="4" class="no-label"><div class="empty-note">No payment history recorded yet.</div></td>
                 </tr>
                 {% endfor %}
             </tbody>

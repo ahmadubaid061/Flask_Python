@@ -2,192 +2,133 @@
 {% block title %}{{ committee.name }} - Explore{% endblock %}
 
 {% block content %}
-<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <div class="flex items-center space-x-3">
-            <h1 class="text-2xl font-bold text-gray-900" id="committee-name-display">{{ committee.name }}</h1>
-            <button type="button" onclick="toggleRenameForm()"
-                class="text-xs text-indigo-600 hover:underline">Rename</button>
-            <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">Period: {{ period
-                }}</span>
+<div class="stripe"></div>
+
+<div class="page-head">
+    <div class="title-block">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h1 id="committee-name-display">{{ committee.name }}</h1>
+            <button type="button" onclick="toggleRenameForm()" class="link" style="background:none; border:none; cursor:pointer; padding:0;">Rename</button>
+            <span class="pill received">Period: {{ period }}</span>
         </div>
 
         <!-- Rename Committee Form (hidden by default) -->
         <form id="rename-form" action="{{ url_for('dashboard.rename_committee', committee_id=committee.id) }}"
-            method="POST" class="hidden mt-2 flex items-center gap-2">
+            method="POST" class="hidden" style="display:none; margin-top:10px; gap:8px; align-items:center;">
             {{ rename_form.hidden_tag() }}
-            {{ rename_form.name(class="border border-gray-300 rounded-lg p-1.5 text-sm focus:ring-2
-            focus:ring-indigo-500 focus:outline-none") }}
-            <button type="submit"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">Save</button>
-            <button type="button" onclick="toggleRenameForm()"
-                class="text-xs text-gray-500 hover:underline">Cancel</button>
+            {{ rename_form.name(style="max-width:220px;") }}
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <button type="button" onclick="toggleRenameForm()" class="link-muted" style="background:none; border:none; cursor:pointer;">Cancel</button>
         </form>
 
-        <p class="text-sm text-gray-600 mt-1">Contribution: Rs. {{ "{:,.2f}".format(committee.contribution_amount) }} |
-            Status: <span class="font-semibold uppercase text-xs">{{ committee.status }}</span></p>
+        <p class="sub">Contribution: Rs. {{ "{:,.2f}".format(committee.contribution_amount) }} &middot;
+            Status: <span style="font-weight:700;">{{ committee.status | capitalize }}</span></p>
     </div>
-    <div class="flex items-center gap-2">
-        <a href="{{ url_for('dashboard.index') }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to
-            Dashboard</a>
+    <div class="page-head-actions" style="align-items:center;">
+        <a href="{{ url_for('dashboard.index') }}" class="link">&larr; Back to dashboard</a>
 
         <!-- Delete Committee Button -->
         <form action="{{ url_for('dashboard.delete_committee', committee_id=committee.id) }}" method="POST"
-            class="inline"
             onsubmit="return confirm('Are you sure you want to DELETE {{ committee.name }}? This action cannot be undone and will remove all members, payments, and payouts.');">
             {{ member_form.hidden_tag() }}
-            <button type="submit"
-                class="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1 rounded hover:bg-red-50 transition">
-                🗑️ Delete
-            </button>
+            <button type="submit" class="btn-danger-text">Delete</button>
         </form>
     </div>
 </div>
 
 <!-- Add Member Section -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Add New Member</h2>
-    <form action="{{ url_for('dashboard.add_member', committee_id=committee.id) }}" method="POST"
-        class="flex flex-col sm:flex-row gap-3">
+<div class="card">
+    <div class="card-title" style="margin-bottom:14px;">Add new member</div>
+    <form action="{{ url_for('dashboard.add_member', committee_id=committee.id) }}" method="POST" class="inline-form">
         {{ member_form.hidden_tag() }}
-        <div class="flex-grow">
-            {{ member_form.name(class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500
-            focus:outline-none", placeholder="Member Full Name") }}
+        <div class="grow">
+            {{ member_form.name(placeholder="Member full name") }}
         </div>
-        <div class="w-full sm:w-40">
-            {{ member_form.gender(class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500
-            focus:outline-none") }}
+        <div style="width:100%; max-width:160px;">
+            {{ member_form.gender() }}
         </div>
-        <button type="submit"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg transition">
-            Add Member
-        </button>
+        <button type="submit" class="btn btn-primary">Add member</button>
     </form>
 </div>
 
-<!-- Members Table & Payout Panel -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-lg font-semibold text-gray-900">Members & Cycle Payments</h2>
+<!-- Members & Payout Panel -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Members &amp; cycle payments</div>
 
         <!-- Payout Trigger Form -->
         <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST"
-            class="flex items-center gap-2">
+            class="inline-form" style="flex-wrap:wrap;">
             {{ member_form.hidden_tag() }}
-            <select name="member_id" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
-                <option value="">Select Member for Payout</option>
+            <select name="member_id">
+                <option value="">Select member for payout</option>
                 {% for item in members_data %}
                 {% if not item.member.has_received_package %}
                 <option value="{{ item.member.id }}">{{ item.member.name }}</option>
                 {% endif %}
                 {% endfor %}
             </select>
-            <button type="submit"
-                class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
-                Record Payout
-            </button>
+            <button type="submit" class="btn btn-secondary btn-sm">Record payout</button>
         </form>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
-                    <th class="p-4">Name</th>
-                    <th class="p-4">Gender</th>
-                    <th class="p-4">Current Period Status</th>
-                    <th class="p-4">Payout Status</th>
-                    <th class="p-4 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 text-sm">
-                {% for item in members_data %}
-                <tr>
-                    <td class="p-4 font-medium text-gray-900">{{ item.member.name }}</td>
-                    <td class="p-4 text-gray-600">{{ item.member.gender | capitalize }}</td>
-                    <td class="p-4">
-                        <!-- Mark as Paid Form - WITH CSRF TOKEN -->
-                        <form
-                            action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=item.member.id) }}"
-                            method="POST">
-                            {{ member_form.hidden_tag() }}
-                            <input type="hidden" name="paid"
-                                value="{{ 'false' if item.current_period_paid else 'true' }}">
-                            <button type="submit"
-                                class="px-3 py-1 rounded-full text-xs font-semibold {% if item.current_period_paid %}bg-green-100 text-green-800 hover:bg-green-200{% else %}bg-amber-100 text-amber-800 hover:bg-amber-200{% endif %} transition">
-                                {{ 'Paid' if item.current_period_paid else 'Mark as Paid' }}
-                            </button>
-                        </form>
-                    </td>
-                    <td class="p-4">
-                        {% if item.member.has_received_package %}
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                            ✓ Received ({{ item.member.received_period }})
-                        </span>
-                        {% else %}
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
-                            ⏱ Pending
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td class="p-4 text-right space-x-2 flex justify-end items-center gap-2">
-                        <!-- View Details Button -->
-                        <a href="{{ url_for('dashboard.member_details', committee_id=committee.id, member_id=item.member.id) }}"
-                            class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">
-                            View
-                        </a>
+    {% for item in members_data %}
+    <div class="member-row">
+        <div class="avatar" style="background: hsl({{ (loop.index0 * 63) % 360 }}deg 45% 42%);">
+            {{ item.member.name.split(' ')[0][0] | upper }}{{ (item.member.name.split(' ')[1][0] if item.member.name.split(' ')|length > 1 else '') | upper }}
+        </div>
+        <div class="name-block">
+            <div class="name">{{ item.member.name }}</div>
+            <div class="role">{{ item.member.gender | capitalize }}</div>
+        </div>
 
-                        <!-- Catch Up Button (Pay Past Dues) -->
-                        <a href="{{ url_for('dashboard.member_catchup', committee_id=committee.id, member_id=item.member.id) }}"
-                            class="text-blue-600 hover:text-blue-800 text-xs font-medium">
-                            Catch Up
-                        </a>
+        <div class="member-row-meta">
+            <!-- Mark as Paid Form -->
+            <form action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=item.member.id) }}" method="POST">
+                {{ member_form.hidden_tag() }}
+                <input type="hidden" name="paid" value="{{ 'false' if item.current_period_paid else 'true' }}">
+                <button type="submit" class="pill {{ 'paid' if item.current_period_paid else 'due' }}">
+                    {{ 'Paid' if item.current_period_paid else 'Mark as paid' }}
+                </button>
+            </form>
 
-                        <!-- Reset Payout Button (if member has received payout) -->
-                        {% if item.member.has_received_package %}
-                        <form
-                            action="{{ url_for('dashboard.reset_member_payout', committee_id=committee.id, member_id=item.member.id) }}"
-                            method="POST" class="inline"
-                            onsubmit="return confirm('Reset payout for {{ item.member.name }} back to pending?');">
-                            {{ member_form.hidden_tag() }}
-                            <button type="submit" class="text-orange-600 hover:text-orange-800 text-xs font-medium">
-                                Reset Payout
-                            </button>
-                        </form>
-                        {% endif %}
+            {% if item.member.has_received_package %}
+            <span class="pill received">Received &middot; {{ item.member.received_period }}</span>
+            {% else %}
+            <span class="pill pending">Payout pending</span>
+            {% endif %}
+        </div>
 
-                        <!-- Remove Member Form -->
-                        <form
-                            action="{{ url_for('dashboard.remove_member', committee_id=committee.id, member_id=item.member.id) }}"
-                            method="POST" class="inline"
-                            onsubmit="return confirm('Are you sure you want to remove {{ item.member.name }}?');">
-                            {{ member_form.hidden_tag() }}
-                            <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">
-                                Remove
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" class="p-6 text-center text-gray-500">No members added to this committee yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="row-actions">
+            <a href="{{ url_for('dashboard.member_details', committee_id=committee.id, member_id=item.member.id) }}" class="link">View</a>
+            <a href="{{ url_for('dashboard.member_catchup', committee_id=committee.id, member_id=item.member.id) }}" class="link">Catch up</a>
+            {% if item.member.has_received_package %}
+            <form action="{{ url_for('dashboard.reset_member_payout', committee_id=committee.id, member_id=item.member.id) }}"
+                method="POST" onsubmit="return confirm('Reset payout for {{ item.member.name }} back to pending?');">
+                {{ member_form.hidden_tag() }}
+                <button type="submit" class="link" style="background:none; border:none; cursor:pointer; color:#C98A2B;">Reset</button>
+            </form>
+            {% endif %}
+            <form action="{{ url_for('dashboard.remove_member', committee_id=committee.id, member_id=item.member.id) }}"
+                method="POST" onsubmit="return confirm('Remove {{ item.member.name }} from this committee?');">
+                {{ member_form.hidden_tag() }}
+                <button type="submit" class="link-danger" style="background:none; border:none; cursor:pointer;">Remove</button>
+            </form>
+        </div>
     </div>
+    {% else %}
+    <div class="empty-note">No members added to this committee yet.</div>
+    {% endfor %}
 </div>
 
 <!-- Period History -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-    <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 class="text-lg font-semibold text-gray-900">Period History</h2>
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">Period history</div>
 
         {% if available_periods %}
-        <form method="GET" action="{{ url_for('dashboard.explore', committee_id=committee.id) }}"
-            class="flex items-center gap-2">
-            <select name="period" onchange="this.form.submit()"
-                class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
+        <form method="GET" action="{{ url_for('dashboard.explore', committee_id=committee.id) }}" class="inline-form" style="flex-wrap:wrap;">
+            <select name="period" onchange="this.form.submit()">
                 <option value="">Select a period&hellip;</option>
                 {% for label in available_periods %}
                 <option value="{{ label }}" {% if label==selected_period %}selected{% endif %}>{{ label }}</option>
@@ -195,122 +136,103 @@
             </select>
         </form>
         {% else %}
-        <span class="text-sm text-gray-500">No period data recorded yet.</span>
+        <span class="muted" style="font-size:13px;">No period data recorded yet.</span>
         {% endif %}
     </div>
 
     {% if period_summary %}
-    <div class="p-6 border-b border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Period</p>
-            <p class="text-lg font-semibold text-gray-900">{{ period_summary.period_label }}</p>
+    <div class="stat-row" style="margin-bottom:16px;">
+        <div class="stat">
+            <div class="label">Period</div>
+            <div class="val">{{ period_summary.period_label }}</div>
         </div>
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Total Received</p>
-            <p class="text-lg font-semibold text-emerald-700">Rs. {{ "{:,.0f}".format(period_summary.total_received)
-                }}</p>
+        <div class="stat">
+            <div class="label">Total received</div>
+            <div class="val teal">Rs. {{ "{:,.0f}".format(period_summary.total_received) }}</div>
         </div>
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Expected</p>
-            <p class="text-lg font-semibold text-gray-700">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}
-            </p>
+        <div class="stat">
+            <div class="label">Expected</div>
+            <div class="val">Rs. {{ "{:,.0f}".format(period_summary.expected_total) }}</div>
         </div>
-        <div>
-            <p class="text-xs uppercase tracking-wider text-gray-500">Payout</p>
-            <p class="text-lg font-semibold text-purple-700">
-                {% if period_summary.total_payout %}
-                Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}
-                {% else %}
-                &mdash;
-                {% endif %}
-            </p>
+        <div class="stat">
+            <div class="label">Payout</div>
+            <div class="val marigold">
+                {% if period_summary.total_payout %}Rs. {{ "{:,.0f}".format(period_summary.total_payout) }}{% else %}&mdash;{% endif %}
+            </div>
         </div>
     </div>
 
-    <div class="px-6 pt-4 flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-gray-600">
-        {% if period_summary.payouts %}
-        <div>
-            Paid out to:
-            {% for p in period_summary.payouts %}
-            <span class="font-medium text-gray-900">
-                {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
-            </span>
-            (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{%
-            endif %}){% if not loop.last %}, {% endif %}
+    {% if period_summary.payouts %}
+    <div class="muted" style="font-size:13px; margin-bottom:14px;">
+        Paid out to:
+        {% for p in period_summary.payouts %}
+        <span style="font-weight:700; color:var(--ink);">
+            {{ committee.members | selectattr("id", "equalto", p.member_id) | map(attribute="name") | first }}
+        </span>
+        (Rs. {{ "{:,.0f}".format(p.amount) }}{% if p.payout_date %}, {{ p.payout_date.strftime("%d %b %Y") }}{% endif %}){% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Record Payout for THIS period -->
+    <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST"
+        class="inline-form" style="margin-bottom:16px; flex-wrap:wrap;">
+        {{ member_form.hidden_tag() }}
+        <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
+        <select name="member_id">
+            <option value="">Record payout for {{ period_summary.period_label }}&hellip;</option>
+            {% for member in committee.members %}
+            {% if not member.has_received_package %}
+            <option value="{{ member.id }}">{{ member.name }}</option>
+            {% endif %}
             {% endfor %}
-        </div>
-        {% endif %}
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Record payout</button>
+    </form>
 
-        <!-- Record Payout for THIS period (e.g. backfilling a payout that
-             already happened offline before this committee was added). -->
-        <form action="{{ url_for('dashboard.record_payout', committee_id=committee.id) }}" method="POST"
-            class="flex items-center gap-2 sm:ml-auto">
-            {{ member_form.hidden_tag() }}
-            <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
-            <select name="member_id" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:outline-none">
-                <option value="">Record payout for {{ period_summary.period_label }}&hellip;</option>
-                {% for member in committee.members %}
-                {% if not member.has_received_package %}
-                <option value="{{ member.id }}">{{ member.name }}</option>
-                {% endif %}
-                {% endfor %}
-            </select>
-            <button type="submit"
-                class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
-                Record Payout
-            </button>
-        </form>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse mt-2">
+    <div class="table-wrap">
+        <table class="data-table">
             <thead>
-                <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
-                    <th class="p-4">Name</th>
-                    <th class="p-4">Status</th>
-                    <th class="p-4">Amount</th>
-                    <th class="p-4">Paid Date</th>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Paid date</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 text-sm">
+            <tbody>
                 {% for row in period_summary.members_data %}
                 <tr>
-                    <td class="p-4 font-medium text-gray-900">{{ row.member.name }}</td>
-                    <td class="p-4">
-                        <!-- Mark paid/unpaid for THIS specific period, not
-                             just today's live one. -->
-                        <form
-                            action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=row.member.id) }}"
-                            method="POST">
+                    <td data-label="Name">{{ row.member.name }}</td>
+                    <td data-label="Status">
+                        <!-- Mark paid/unpaid for THIS specific period -->
+                        <form action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=row.member.id) }}" method="POST">
                             {{ member_form.hidden_tag() }}
                             <input type="hidden" name="period_label" value="{{ period_summary.period_label }}">
                             <input type="hidden" name="paid" value="{{ 'false' if row.paid else 'true' }}">
-                            <button type="submit"
-                                class="px-3 py-1 rounded-full text-xs font-semibold {% if row.paid %}bg-green-100 text-green-800 hover:bg-green-200{% else %}bg-amber-100 text-amber-800 hover:bg-amber-200{% endif %} transition">
-                                {{ 'Paid' if row.paid else 'Mark as Paid' }}
+                            <button type="submit" class="pill {{ 'paid' if row.paid else 'due' }}">
+                                {{ 'Paid' if row.paid else 'Mark as paid' }}
                             </button>
                         </form>
                     </td>
-                    <td class="p-4 text-gray-700">
-                        {% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}
-                    </td>
-                    <td class="p-4 text-gray-500">
-                        {{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}
-                    </td>
+                    <td data-label="Amount">{% if row.paid %}Rs. {{ "{:,.0f}".format(row.amount) }}{% else %}&mdash;{% endif %}</td>
+                    <td data-label="Paid date">{{ row.paid_date.strftime("%d %b %Y") if row.paid_date else "—" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% elif selected_period %}
-    <div class="p-6 text-sm text-gray-500">No data found for that period.</div>
+    <div class="empty-note">No data found for that period.</div>
     {% endif %}
 </div>
 
 <script>
     function toggleRenameForm() {
-        document.getElementById('rename-form').classList.toggle('hidden');
-        document.getElementById('committee-name-display').classList.toggle('hidden');
+        var form = document.getElementById('rename-form');
+        var display = document.getElementById('committee-name-display');
+        form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'flex' : 'none';
+        display.style.display = (display.style.display === 'none') ? 'inline' : 'none';
     }
 </script>
 {% endblock %}
