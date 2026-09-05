@@ -65,7 +65,12 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=get_metadata(), literal_binds=True
+        url=url, target_metadata=get_metadata(), literal_binds=True,
+        # Required for SQLite/Turso (libSQL): most ALTER TABLE operations
+        # aren't supported directly, so Alembic has to recreate the table
+        # (copy data -> drop -> rename) to apply anything beyond a plain
+        # ADD COLUMN. Without this, migrations will fail on this DB.
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -100,6 +105,9 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),
+            # Same reason as run_migrations_offline() above — required for
+            # SQLite/Turso to support anything beyond adding a column.
+            render_as_batch=True,
             **conf_args
         )
 
