@@ -17,7 +17,7 @@
         <div style="display:flex; flex-direction:column; gap:10px;">
             {% for payment in unpaid_payments %}
             <form method="POST" style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px; background:var(--rose-bg); border-radius:var(--radius-md); flex-wrap:wrap;">
-                {{ csrf_token() if csrf_token else '' }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div>
                     <p style="font-weight:700; margin:0;">{{ payment.period_label }}</p>
                     <p class="muted" style="font-size:13px; margin:2px 0 0;">Amount: Rs. {{ "{:,.0f}".format(payment.amount) }}</p>

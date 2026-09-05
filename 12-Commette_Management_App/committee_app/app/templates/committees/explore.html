@@ -74,15 +74,17 @@
 
     {% for item in members_data %}
     <div class="member-row">
-        <div class="avatar" style="background: hsl({{ (loop.index0 * 63) % 360 }}deg 45% 42%);">
-            {{ item.member.name.split(' ')[0][0] | upper }}{{ (item.member.name.split(' ')[1][0] if item.member.name.split(' ')|length > 1 else '') | upper }}
-        </div>
-        <div class="name-block">
-            <div class="name">{{ item.member.name }}</div>
-            <div class="role">{{ item.member.gender | capitalize }}</div>
+        <div class="member-identity">
+            <div class="avatar" style="background: hsl({{ (loop.index0 * 63) % 360 }}deg 45% 42%);">
+                {{ item.member.name.split(' ')[0][0] | upper }}{{ (item.member.name.split(' ')[1][0] if item.member.name.split(' ')|length > 1 else '') | upper }}
+            </div>
+            <div class="name-block">
+                <div class="name">{{ item.member.name }}</div>
+                <div class="role">{{ item.member.gender | capitalize }}</div>
+            </div>
         </div>
 
-        <div class="member-row-meta">
+        <div class="member-payment">
             <!-- Mark as Paid Form -->
             <form action="{{ url_for('dashboard.mark_payment', committee_id=committee.id, member_id=item.member.id) }}" method="POST">
                 {{ member_form.hidden_tag() }}
@@ -91,7 +93,9 @@
                     {{ 'Paid' if item.current_period_paid else 'Mark as paid' }}
                 </button>
             </form>
+        </div>
 
+        <div class="member-payout">
             {% if item.member.has_received_package %}
             <span class="pill received">Received &middot; {{ item.member.received_period }}</span>
             {% else %}
