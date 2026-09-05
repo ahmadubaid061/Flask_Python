@@ -9,7 +9,7 @@ from app.models.member import Member
 from app.models.payment import Payment
 from app.models.payout import Payout
 from app.forms.member_forms import CommitteeForm, MemberForm, RenameCommitteeForm
-from app.utils.periods import current_period_label, get_available_periods, get_period_summary
+from app.utils.periods import current_period_label, get_available_periods, get_period_summary, generate_elapsed_periods
 
 # ✅ BLUEPRINT DEFINITION
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -423,28 +423,52 @@ def member_catchup(committee_id, member_id):
     """Allow member to pay for past weeks they missed."""
     committee = _committee_or_404(committee_id)
     member = _member_or_404(committee, member_id)
-    
-    # Get all unpaid payments for this member
-    unpaid_payments = Payment.query.filter_by(
-        member_id=member.id,
-        paid=False
-    ).order_by(Payment.period_label.asc()).all()
-    
+
+    # Every period the committee has reached so far (e.g. W1..W5), regardless
+    # of whether a Payment row exists yet for any of them.
+    elapsed_periods = generate_elapsed_periods(committee.frequency, committee.start_date)
+
+    # Payment rows that DO exist for this member, keyed by period label.
+    existing_payments = {
+        p.period_label: p
+        for p in Payment.query.filter_by(member_id=member.id).all()
+    }
+
     if request.method == "POST":
         period_label = request.form.get("period_label")
-        
-        # Mark as paid
-        payment = Payment.query.filter_by(
-            member_id=member.id,
-            period_label=period_label
-        ).first()
-        
+
+        payment = existing_payments.get(period_label)
         if payment:
             payment.paid = True
             payment.paid_date = date.today()
-            db.session.commit()
-            flash(f"Payment for {period_label} marked as paid.", "success")
-    
+        else:
+            # No row ever existed for this period (member missed it entirely) —
+            # create it now as paid.
+            payment = Payment(
+                member_id=member.id,
+                committee_id=committee.id,
+                period_label=period_label,
+                amount=committee.contribution_amount,
+                paid=True,
+                paid_date=date.today(),
+            )
+            db.session.add(payment)
+
+        db.session.commit()
+        flash(f"Payment for {period_label} marked as paid.", "success")
+        return redirect(url_for("dashboard.member_catchup", committee_id=committee.id, member_id=member.id))
+
+    # An elapsed period counts as unpaid if there's no row for it at all,
+    # or there's a row but it's marked paid=False.
+    unpaid_payments = []
+    for label in elapsed_periods:
+        payment = existing_payments.get(label)
+        if payment is None or not payment.paid:
+            unpaid_payments.append({
+                "period_label": label,
+                "amount": payment.amount if payment else committee.contribution_amount,
+            })
+
     return render_template(
         "members/catchup.html",
         committee=committee,
