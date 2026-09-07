@@ -73,7 +73,12 @@ def login():
         # Stash which admin is pending verification in the server-side
         # session (not a cookie the user can tamper with)
         session["pending_admin_id"] = admin.id
-        flash("A verification code has been emailed to you.", "info")
+        flash(
+            "A verification code has been emailed to you. "
+            "Don't see it? Check your spam/junk folder — verification emails "
+            "sometimes land there.",
+            "info",
+        )
         return redirect(url_for("auth.verify"))
 
     return render_template("auth/login.html", form=form)
