@@ -7,3 +7,18 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.3
+services:
+  - type: web
+    name: committee-management
+    env: python
+    buildCommand: pip install -r requirements.txt
+    # Switched from gunicorn to waitress: gunicorn forks a worker process,
+    # and Turso's client (sqlalchemy-libsql) runs on Rust's Tokio async
+    # runtime, which does not survive being forked - that's what the
+    # "tokio-runtime-worker panicked... Resource deadlock avoided" crash
+    # loop in the logs is. Waitress is pure-Python and single-process, so
+    # there's no fork for Tokio to break across.
+    startCommand: waitress-serve --host=0.0.0.0 --port=$PORT run:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
