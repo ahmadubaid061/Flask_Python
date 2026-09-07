@@ -1,22 +1,11 @@
 # gunicorn.conf.py
-import multiprocessing
-import os
+import platform
 
-# Bind to the port Render provides
-bind = f"0.0.0.0:{os.getenv('PORT', '10000')}"
+# Disable preload to prevent fork-related crashes with libSQL
+preload_app = platform.system() != "Darwin"  # Disable on macOS
+# Or simply:
+preload_app = False  # Force disable for all platforms
 
-# Worker settings
-workers = 2  # Start with 2 workers
-worker_class = "sync"
-timeout = 120  # 2 minutes timeout
-graceful_timeout = 30
-preload_app = True  # Preload app to reduce memory per worker
-
-# Prevent memory leaks
-max_requests = 1000
-max_requests_jitter = 100
-
-# Logging
-accesslog = "-"
-errorlog = "-"
-loglevel = "info"
+bind = "0.0.0.0:10000"
+workers = 1  # Start with just 1 worker
+timeout = 120
