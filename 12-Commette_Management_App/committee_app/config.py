@@ -27,13 +27,11 @@ class Config:
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # --- Mail (for new-browser login verification) ---
-    MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_USERNAME")
+    # --- Mail (Brevo HTTP API — SMTP is blocked on Render's free tier, so
+    # login-code emails go out over HTTPS via Brevo's API instead) ---
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
+    BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL")
+    BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Committee Manager")
 
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 
